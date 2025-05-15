@@ -1,0 +1,22 @@
+#!/bin/bash
+set -e
+# Ensure script is run as root
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit 1
+fi
+
+# Step 1: Check if curl is installed
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl not found. Installing curl..."
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y curl
+  else
+    echo "Unsupported package manager. Install curl manually."
+    exit 1
+  fi
+else
+  echo "curl is already installed."
+fi
+
+curl -o dysk https://dystroy.org/dysk/download/x86_64-linux/dysk
