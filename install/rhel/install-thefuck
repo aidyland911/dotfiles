@@ -1,0 +1,32 @@
+#!/bin/bash
+set -e
+
+# 🔒 Ensure script is run as root
+if [ "$EUID" -ne 0 ]; then
+  echo "❌ Please run as root"
+  exit 1
+fi
+
+# 🔄 Step 1: Update package list
+echo "📦 Updating system..."
+dnf update -y
+
+# 🧰 Step 2: Install Python and pip
+echo "🐍 Installing Python and dependencies..."
+dnf install -y python3 python3-pip python3-devel
+
+# 📥 Step 3: Install 'thefuck'
+echo "🚀 Installing 'thefuck'..."
+pip3 install thefuck
+
+# 🧠 Step 4: Add alias and eval to user's bashrc
+echo "🔧 Configuring aliases..."
+
+BASHRC="/home/${SUDO_USER:-$USER}/.bashrc"
+
+echo 'eval "$(thefuck --alias)"' >> "$BASHRC"
+echo 'alias fk=thefuck' >> "$BASHRC"
+
+# ♻️ Step 5: Reload shell config
+echo "✅ Done. Run 'source ~/.bashrc' or open a new terminal."
+
