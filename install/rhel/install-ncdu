@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Ensure script is run as root
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit 1
+fi
+
+# Step 1: Check if curl is installed
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl not found. Installing curl..."
+  if command -v apt >/dev/null 2>&1; then
+    apt update && apt install -y curl
+  elif command -v yum >/dev/null 2>&1; then
+    yum install -y curl
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y curl
+  else
+    echo "Unsupported package manager. Install curl manually."
+    exit 1
+  fi
+else
+  echo "curl is already installed."
+fi
+
+# Step 2: Download ncdu tar.gz
+NCDU_URL="https://dev.yorhel.nl/download/ncdu-2.3-linux-x86_64.tar.gz"
+OUTPUT_FILE="ncdu.tar.gz"
+
+echo "Downloading ncdu from $NCDU_URL..."
+curl -L "$NCDU_URL" -o "$OUTPUT_FILE"
+if [ $? -ne 0 ]; then
+  echo "Download failed!"
+  exit 1
+fi
+
+# Step 3: Extract to /usr/local/bin
+TARGET_DIR="/usr/local/bin/"
+
+mkdir -p "$TARGET_DIR"
+tar -xzvf "$OUTPUT_FILE" -C "$TARGET_DIR" 
+
+echo "ncdu extracted to $TARGET_DIR"
+
+
+echo "Installation complete. Run 'ncdu' to start."
+
