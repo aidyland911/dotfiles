@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -e
+
+# Ensure script is run as root
+if [ "$EUID" -ne 0 ]; then
+  echo "Please run as root"
+  exit 1
+fi
+
+# Step 1: Check if curl is installed
+if ! command -v curl >/dev/null 2>&1; then
+  echo "curl not found. Installing curl..."
+  if command -v apt >/dev/null 2>&1; then
+    apt update && apt install -y curl
+  elif command -v yum >/dev/null 2>&1; then
+    yum install -y curl
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y curl
+  else
+    echo "Unsupported package manager. Install curl manually."
+    exit 1
+  fi
+else
+  echo "curl is already installed."
+fi
+
+
+# Define RPM URL
+RPM_URL="https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/40/Everything/x86_64/os/Packages/t/tealdeer-1.6.1-7.fc40.x86_64.rpm"
+
+# Download the RPM
+echo "📦 Downloading Tealdeer RPM..."
+wget "$RPM_URL" -O tealdeer.rpm
+
+# Install the RPM using dnf
+echo "📥 Installing Tealdeer..."
+sudo dnf install -y ./tealdeer.rpm
+
+# Clean up
+rm -f tealdeer.rpm
+
+# Update tldr cache
+echo "🔄 Updating tldr cache..."
+tldr --update
+
+echo "✅ Tealdeer installed successfully!"
