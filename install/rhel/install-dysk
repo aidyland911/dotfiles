@@ -1,22 +1,33 @@
 #!/bin/bash
 set -e
-# Ensure script is run as root
+
+# 🔒 Ensure script is run as root
 if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root"
+  echo "❌ Please run as root"
   exit 1
 fi
 
-# Step 1: Check if curl is installed
+# 🔍 Step 1: Check if curl is installed
 if ! command -v curl >/dev/null 2>&1; then
-  echo "curl not found. Installing curl..."
-  elif command -v dnf >/dev/null 2>&1; then
+  echo "📦 curl not found. Installing curl..."
+  if command -v dnf >/dev/null 2>&1; then
     dnf install -y curl
   else
-    echo "Unsupported package manager. Install curl manually."
+    echo "⚠️ Unsupported package manager. Install curl manually."
     exit 1
   fi
 else
-  echo "curl is already installed."
+  echo "✅ curl is already installed."
 fi
 
-curl -o dysk https://dystroy.org/dysk/download/x86_64-linux/dysk
+# ⬇️ Step 2: Download dysk to /usr/local/bin
+echo "📥 Downloading dysk..."
+curl -o /usr/local/bin/dysk https://dystroy.org/dysk/download/x86_64-linux/dysk
+
+# 🛠️ Step 3: Make dysk executable
+chmod +x /usr/local/bin/dysk
+
+# 🧹 Step 4: Clean up
+rm -f dysk 2>/dev/null || true  # Only if some stray local file exists
+
+echo "✅ Installation complete. You can now use 'dysk'."
