@@ -30,3 +30,4 @@ cat << 'EOF' >> ~/.bashrc
 # 🔑 SSH Agent Auto-Start for GitHub
 eval \$(ssh-agent -s) >/dev/null
 ssh-add ~/.ssh/ansible 2>/dev/null
+EOF
