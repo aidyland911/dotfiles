@@ -32,13 +32,12 @@ alias dotrefresh='
     git add aliases bashrc && \
     git commit -m "dotrefresh: update aliases and bashrc" && \
     git push && \
-    echo "🗑️ Removing local aliases and bashrc..." && \
-    rm -f ~/dotfiles/aliases ~/dotfiles/bashrc && \
-    echo "⬇️ Pulling fresh from GitHub..." && \
-    git pull && \
+    echo "🔄 Restoring fresh aliases and bashrc from Git..." && \
+    git restore aliases bashrc && \
     echo "🔄 Sourcing new bashrc and aliases..." && \
     source ~/dotfiles/bashrc && \
     source ~/dotfiles/aliases && \
     echo "✅ Dotfiles refreshed!"
 '
+
 alias c='clear'
