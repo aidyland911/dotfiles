@@ -26,3 +26,19 @@ alias dot='cd ~/dotfiles/install/rhel/'
 eval "$(thefuck --alias)"
 alias fk=fuck
 export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
+alias dotrefresh='
+    echo "🔼 Committing aliases & bashrc to GitHub..." && \
+    cd ~/dotfiles && \
+    git add aliases bashrc && \
+    git commit -m "dotrefresh: update aliases and bashrc" && \
+    git push && \
+    echo "🗑️ Removing local aliases and bashrc..." && \
+    rm -f ~/dotfiles/aliases ~/dotfiles/bashrc && \
+    echo "⬇️ Pulling fresh from GitHub..." && \
+    git pull && \
+    echo "🔄 Sourcing new bashrc and aliases..." && \
+    source ~/dotfiles/bashrc && \
+    source ~/dotfiles/aliases && \
+    echo "✅ Dotfiles refreshed!"
+'
+

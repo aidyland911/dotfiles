@@ -4,6 +4,9 @@
 if [ -f /etc/bashrc ]; then
 	. /etc/bashrc
 fi
+# Load custom aliases
+[ -f ~/dotfiles/aliases ] && source ~/dotfiles/aliases
+
 
 # User specific environment
 if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
@@ -21,7 +24,3 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 
-alias dot='cd ~/dotfiles/install/rhel/'
-eval "$(thefuck --alias)"
-alias fk=fuck
-export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
