@@ -1,0 +1,71 @@
+#!/bin/bash
+#============================================================#
+#  Author      : Amr ALAidy
+#  Description : This script installs Figurine and sets it up as an SSH login banner.
+#  Date        : 17/05/2025
+#  Version     : 1.1
+#  Usage       : Run this script as ROOT or with sudo privileges.
+#  Notes       : Handles /tmp/deploy path after tar extraction.
+#============================================================#
+
+set -e
+
+# 🔒 Root check
+if [ "$EUID" -ne 0 ]; then
+  echo "❌ This script must be run as root. Please use sudo."
+  exit 1
+fi
+
+# 🕵️ Check if wget is installed
+if ! command -v wget >/dev/null 2>&1; then
+  echo "❌ wget not found. Installing..."
+  if command -v dnf >/dev/null 2>&1; then
+    dnf install -y wget
+  elif command -v apt >/dev/null 2>&1; then
+    apt update && apt install -y wget
+  else
+    echo "❌ Could not detect package manager. Please install wget manually."
+    exit 1
+  fi
+else
+  echo "✅ wget is already installed."
+fi
+
+# 🕵️ Check if figurine is already installed
+if command -v figurine >/dev/null 2>&1; then
+  echo "✅ figurine is already installed."
+else
+  echo "📦 Installing Figurine..."
+  cd /tmp
+  wget -q https://github.com/arsham/figurine/releases/download/v1.3.0/figurine_linux_amd64_v1.3.0.tar.gz
+  tar -xzf figurine_linux_amd64_v1.3.0.tar.gz
+
+  if [ -f /tmp/deploy/figurine ]; then
+    mv /tmp/deploy/figurine /usr/local/bin/
+    chmod +x /usr/local/bin/figurine
+    echo "✅ Figurine installed to /usr/local/bin"
+  else
+    echo "❌ figurine binary not found in /tmp/deploy. Extraction may have failed."
+    exit 1
+  fi
+fi
+
+# 📝 Setup SSH login banner
+PROFILE_SCRIPT="/etc/profile.d/hostname-banner.sh"
+
+if [ -f "$PROFILE_SCRIPT" ]; then
+  echo "ℹ️ SSH banner script already exists at $PROFILE_SCRIPT"
+else
+  echo "🖊️ Creating SSH banner script at $PROFILE_SCRIPT..."
+  cat << 'EOF' > "$PROFILE_SCRIPT"
+#!/bin/bash
+echo ""
+/usr/local/bin/figurine -f "3d.flf" "$HOSTNAME"
+echo ""
+EOF
+  chmod +x "$PROFILE_SCRIPT"
+  echo "✅ SSH banner configured."
+fi
+
+echo "🎉 Done! Login via SSH and enjoy your fancy Figurine banner!"
+
