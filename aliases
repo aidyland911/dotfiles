@@ -41,3 +41,9 @@ alias dotrefresh='
 '
 
 alias c='clear'
+alias ds='
+    cd ~/dotfiles && \
+    source ~/dotfiles/bashrc && \
+    source ~/dotfiles/aliases && \
+    echo "✅ Dotfiles refreshed!"
+'
