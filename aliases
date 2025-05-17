@@ -1,0 +1,28 @@
+# Bash aliases
+alias c='clear'
+alias ls='ls -F --color=auto --show-control-chars'
+alias h=’history’
+alias ll='ls -l'
+alias ll.='ls -la'
+alias lls='ls -la --sort=size'
+alias llt='ls -la --sort=time'
+alias rm='rm -iv'
+alias v='nvim'
+alias sbrc='source ~/.bashrc'
+alias brc=' nvim ~/.bashrc'
+# Docker Aliases
+alias d='docker'
+alias dps='docker ps' # Show running containers
+alias dpa='docker ps -a' # Show all containers
+alias drm='docker rm $(docker ps -aq)' # Remove all stopped containers
+alias dimg='docker images' # Show Docker images
+alias dip='docker inspect -f "{{ .NetworkSettings.IPAddress }}"' # Get container IP
+# Kub Aliases
+alias kctx='kubectl config current-context' # Show current Kubernetes context
+alias ksys='kubectl get pods -n kube-system' # Show system pods
+alias kns='kubectl config set-context --current --namespace=' # Change namespace
+alias kexec='kubectl exec -it' # Execute command in a pod
+alias dot='cd ~/dotfiles/install/rhel/'
+eval "$(thefuck --alias)"
+alias fk=fuck
+export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
