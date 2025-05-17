@@ -24,3 +24,7 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 
+
+# 🔑 SSH Agent Auto-Start for GitHub
+eval \$(ssh-agent -s) >/dev/null
+ssh-add ~/.ssh/ansible 2>/dev/null
