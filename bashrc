@@ -24,6 +24,8 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 
+if ! grep -q "ssh-add ~/.ssh/ansible" ~/.bashrc; then
+  cat << 'EOF' >> ~/.bashrc
 
 # 🔑 SSH Agent Auto-Start for GitHub
 eval \$(ssh-agent -s) >/dev/null
