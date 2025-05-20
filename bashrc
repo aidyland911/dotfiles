@@ -28,3 +28,5 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
     ssh-add ~/.ssh/ansible 2>/dev/null
 fi
 
+export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
+export PATH=$PATH:/usr/local/bin
