@@ -2,7 +2,7 @@
 HOSTNAME="Calcium"
 IPADDR="10.1.1.20"
 GATEWAY="10.1.1.254"
-IFACE="ens160"
+IFACE="ens192"
 DNS="163.121.128.134"
 
 echo "Setting hostname to $HOSTNAME"
