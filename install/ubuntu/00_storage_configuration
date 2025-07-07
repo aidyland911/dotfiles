@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DISK="/dev/sdb"
-VG="vg_dynatrace"
+DISK="/dev/sda"
+VG="ubuntu-vg"
 
 # Create PV, VG
 sudo pvcreate $DISK
