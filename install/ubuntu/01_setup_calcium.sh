@@ -1,9 +1,9 @@
 #!/bin/bash
 HOSTNAME="Calcium"
 IPADDR="10.1.1.20"
-GATEWAY="10.1.1.1"
+GATEWAY="10.1.1.254"
 IFACE="ens160"
-DNS="10.1.1.254"
+DNS="163.121.128.134"
 
 echo "Setting hostname to $HOSTNAME"
 hostnamectl set-hostname "$HOSTNAME"
