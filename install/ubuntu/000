@@ -1,0 +1,16 @@
+#!/bin/bash
+# Remove SSH host keys (regenerated on clone)
+sudo rm -f /etc/ssh/ssh_host_*
+
+# Clean hostname and machine-id
+echo "ubuntu" | sudo tee /etc/hostname
+sudo truncate -s 0 /etc/machine-id
+sudo rm -f /var/lib/dbus/machine-id
+sudo ln -s /etc/machine-id /var/lib/dbus/machine-id
+
+# Optional: Clean cloud-init (if you're using it)
+sudo cloud-init clean --logs
+
+# Clean logs and DHCP leases
+sudo rm -rf /var/log/* /var/tmp/*
+sudo rm -f /var/lib/dhcp/*
