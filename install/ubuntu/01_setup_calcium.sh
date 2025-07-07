@@ -1,36 +1,33 @@
 #!/bin/bash
+HOSTNAME="Calcium"
+IPADDR="10.1.1.20"
+GATEWAY="10.1.1.1"
+IFACE="ens160"
+DNS="10.1.1.254"
 
-DISK="/dev/sdb"
-VG="vg_dynatrace"
+echo "Setting hostname to $HOSTNAME"
+hostnamectl set-hostname "$HOSTNAME"
+echo "$HOSTNAME" > /etc/hostname
 
-# Create PV, VG
-sudo pvcreate $DISK
-sudo vgcreate $VG $DISK
+echo "Backing up existing netplan configs..."
+for f in /etc/netplan/*.yaml; do
+  [ -e "$f" ] && mv "$f" "${f%.yaml}.pak"
+done
 
-# Create LVs
-sudo lvcreate -L 50G -n opt_dynatrace $VG
-sudo lvcreate -L 100G -n var_dynatrace $VG
-sudo lvcreate -L 50G -n cassandra $VG
-sudo lvcreate -L 50G -n elasticsearch $VG
+tee /etc/netplan/01-static.yaml > /dev/null <<EOF
+network:
+  version: 2
+  ethernets:
+    $IFACE:
+      dhcp4: no
+      addresses: [$IPADDR/24]
+      nameservers:
+        addresses: [$DNS]
+      routes:
+        - to: 0.0.0.0/0
+          via: $GATEWAY
+EOF
 
-# Format
-sudo mkfs.ext4 /dev/$VG/opt_dynatrace
-sudo mkfs.ext4 /dev/$VG/var_dynatrace
-sudo mkfs.ext4 /dev/$VG/cassandra
-sudo mkfs.ext4 /dev/$VG/elasticsearch
-
-# Create mount points
-sudo mkdir -p /opt/dynatrace-managed
-sudo mkdir -p /var/opt/dynatrace-managed
-sudo mkdir -p /var/opt/dynatrace-managed/cassandra
-sudo mkdir -p /var/opt/dynatrace-managed/elasticsearch
-
-# Mount
-echo "Updating /etc/fstab..."
-echo "/dev/$VG/opt_dynatrace /opt/dynatrace-managed ext4 defaults 0 2" | sudo tee -a /etc/fstab
-echo "/dev/$VG/var_dynatrace /var/opt/dynatrace-managed ext4 defaults 0 2" | sudo tee -a /etc/fstab
-echo "/dev/$VG/cassandra /var/opt/dynatrace-managed/cassandra ext4 defaults 0 2" | sudo tee -a /etc/fstab
-echo "/dev/$VG/elasticsearch /var/opt/dynatrace-managed/elasticsearch ext4 defaults 0 2" | sudo tee -a /etc/fstab
-
-# Mount all
-sudo mount -a
+chmod 600 /etc/netplan/01-static.yaml
+netplan apply
+ip a show "$IFACE"
