@@ -21,9 +21,9 @@ sudo mkfs.ext4 /dev/$VG/elasticsearch
 
 # Create mount points
 sudo mkdir -p /opt/dynatrace-managed
-sudo mkdir -p /var/opt/dynatrace-managed
-sudo mkdir -p /var/opt/dynatrace-managed/cassandra
-sudo mkdir -p /var/opt/dynatrace-managed/elasticsearch
+sudo mkdir -p /var/opt/dynatrace-managed/{cassandra,elasticsearch}
+#sudo mkdir -p /var/opt/dynatrace-managed/cassandra
+#sudo mkdir -p /var/opt/dynatrace-managed/elasticsearch
 
 # Mount
 echo "Updating /etc/fstab..."
