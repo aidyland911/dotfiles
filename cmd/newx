@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -e
+file="$HOME/scripts/$1"
+touch "$file"
+chmod +x "$file"
+echo -e "#!/usr/bin/env bash\nset -e" >>"$file"
+exec nvim "$file"
