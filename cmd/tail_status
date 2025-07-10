@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -e
+
+status=$(tailscale status --json 2>/dev/null)
+
+if [ $? -ne 0 ]; then
+  echo '{"text": "TS ❌", "tooltip": "Tailscale not running"}'
+  exit
+fi
+
+self=$(echo "$status" | jq -r '.Self.Online')
+peer_count=$(echo "$status" | jq '.Peer | length')
+
+if [[ "$self" == "true" ]]; then
+  echo "{\"text\": \"TS ✅ ($peer_count)\", \"tooltip\": \"Tailscale connected with $peer_count peers\"}"
+else
+  echo '{"text": "TS ❌", "tooltip": "Tailscale offline"}'
+fi
+#!/usr/bin/env bash
+set -e
