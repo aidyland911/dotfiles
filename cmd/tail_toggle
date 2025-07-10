@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+if tailscale status | grep -q "stopped"; then
+  notify-send "Tailscale" "Connecting..."
+  sudo tailscale up
+else
+  notify-send "Tailscale" "Disconnecting..."
+  sudo tailscale down
+fi
