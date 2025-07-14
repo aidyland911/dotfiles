@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-current=$(hyprctl activeworkspace -j | jq '.id')
-last=$(hyprctl workspaces -j | jq '.[] | select(.lastfocus == true) | .id')
+logfile="/tmp/ws_toggle"
 
-# If last is valid and not the current workspace, go to it
-if [[ -n "$last" && "$last" != "$current" ]]; then
-  hyprctl dispatch workspace "$last"
-else
-  hyprctl dispatch workspace 1
+# Bail if toggle log is missing or corrupt
+[[ -f "$logfile" ]] || exit 1
+mapfile -t ws <"$logfile"
+[[ ${#ws[@]} -ne 2 ]] && exit 1
+
+current=$(hyprctl activeworkspace -j | jq -r '.id')
+
+echo "$(date) TOGGLE FIRED (current=$current, last=${ws[1]})" >>/tmp/toggle_debug.log
+# If not already at ws[1], switch to it
+if [[ "$current" != "${ws[1]}" ]]; then
+  hyprctl dispatch workspace "${ws[1]}"
+  # Flip order for next toggle
+  printf "%s\n%s\n" "${ws[1]}" "$current" >"$logfile"
 fi
