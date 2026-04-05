@@ -27,7 +27,7 @@ fi
 
 
 # Define RPM URL
-RPM_URL="https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/40/Everything/x86_64/os/Packages/t/tealdeer-1.6.1-7.fc40.x86_64.rpm"
+RPM_URL="https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/Packages/t/tealdeer-1.7.2-2.fc43.x86_64.rpm"
 
 # Download the RPM
 echo "📦 Downloading Tealdeer RPM..."
