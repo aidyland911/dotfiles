@@ -1,0 +1,10 @@
+#!/bin/bash
+
+DOTFILES="$HOME/dotfiles"
+
+ln -sf "$DOTFILES/aliases" ~/.aliases
+ln -sf "$DOTFILES/bashrc" ~/.bashrc
+ln -sf "$DOTFILES/tmux.conf" ~/.tmux.conf
+
+source ~/.bashrc
+echo "Dotfiles linked and loaded."
