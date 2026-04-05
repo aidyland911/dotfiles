@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 # Ensure script is run as root
@@ -11,12 +10,12 @@ fi
 # Step 1: Check if curl is installed
 if ! command -v curl >/dev/null 2>&1; then
   echo "curl not found. Installing curl..."
-  if command -v apt >/dev/null 2>&1; then
-    apt update && apt install -y curl
+  if command -v dnf >/dev/null 2>&1; then
+    dnf install -y curl
   elif command -v yum >/dev/null 2>&1; then
     yum install -y curl
-  elif command -v dnf >/dev/null 2>&1; then
-    dnf install -y curl
+  elif command -v apt >/dev/null 2>&1; then
+    apt update && apt install -y curl
   else
     echo "Unsupported package manager. Install curl manually."
     exit 1
@@ -25,23 +24,33 @@ else
   echo "curl is already installed."
 fi
 
+# Check if unzip is installed
+if ! command -v unzip >/dev/null 2>&1; then
+  echo "unzip not found. Installing unzip..."
+  dnf install -y unzip
+fi
 
 # Define RPM URL
 RPM_URL="https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/Packages/t/tealdeer-1.7.2-2.fc43.x86_64.rpm"
 
 # Download the RPM
-echo "📦 Downloading Tealdeer RPM..."
-wget "$RPM_URL" -O tealdeer.rpm
+echo "Downloading Tealdeer RPM..."
+curl -L -o /tmp/tealdeer.rpm "$RPM_URL"
 
-# Install the RPM using dnf
-echo "📥 Installing Tealdeer..."
-sudo dnf install -y ./tealdeer.rpm
+# Install the RPM
+echo "Installing Tealdeer..."
+dnf install -y /tmp/tealdeer.rpm
+rm -f /tmp/tealdeer.rpm
 
-# Clean up
-rm -f tealdeer.rpm
+# Download tldr cache manually (tldr --update can fail behind proxies)
+ACTUAL_USER="${SUDO_USER:-$USER}"
+CACHE_DIR="/home/$ACTUAL_USER/.cache/tealdeer"
 
-# Update tldr cache
-echo "🔄 Updating tldr cache..."
-tldr --update
+echo "Downloading tldr cache..."
+mkdir -p "$CACHE_DIR"
+curl -L -o /tmp/tldr.zip https://github.com/tldr-pages/tldr/releases/latest/download/tldr.zip
+unzip -o /tmp/tldr.zip -d "$CACHE_DIR/tldr-pages"
+chown -R "$ACTUAL_USER:$ACTUAL_USER" "$CACHE_DIR"
+rm -f /tmp/tldr.zip
 
-echo "✅ Tealdeer installed successfully!"
+echo "Tealdeer installed successfully!"
