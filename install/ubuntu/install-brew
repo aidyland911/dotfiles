@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "==> Installing prerequisites..."
+sudo apt-get update -y
+sudo apt-get install -y build-essential procps curl file git
+
+echo "==> Installing Homebrew..."
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+echo "==> Adding brew to PATH..."
+BREW_PREFIX="/home/linuxbrew/.linuxbrew"
+{
+  echo ""
+  echo "# Homebrew"
+  echo "eval \"\$(${BREW_PREFIX}/bin/brew shellenv)\""
+} >> "${HOME}/.bashrc"
+
+eval "$(${BREW_PREFIX}/bin/brew shellenv)"
+
+echo "==> Verifying installation..."
+brew --version
+
+echo "==> Done! Run 'source ~/.bashrc' or open a new terminal to use brew."
