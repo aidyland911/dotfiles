@@ -45,3 +45,29 @@
     name: thefuck
     state: present
   when: ansible_facts['os_family'] == 'Debian'
+
+# Ubuntu 24.04's thefuck 3.29 still does `from imp import load_source`, but
+# the imp module was removed in Python 3.12 (noble's own python3) — the
+# package is broken out of the box and upstream's fix was never released.
+# Shim load_source with importlib in the two affected files. Idempotent: once
+# patched, the anchored regexp no longer matches. Works offline too.
+- name: Patch thefuck for Python 3.12 (imp module removed)
+  become: true
+  ansible.builtin.replace:
+    path: "/usr/share/thefuck/thefuck/{{ item }}"
+    regexp: '^from imp import load_source$'
+    replace: |-
+      try:
+          from imp import load_source
+      except ImportError:
+          from importlib.util import module_from_spec, spec_from_file_location
+
+          def load_source(name, pathname, *args):
+              spec = spec_from_file_location(name, pathname)
+              module = module_from_spec(spec)
+              spec.loader.exec_module(module)
+              return module
+  loop:
+    - conf.py
+    - types.py
+  when: ansible_facts['os_family'] == 'Debian'

@@ -19,7 +19,8 @@ errors, and easy to throw away and rebuild. The venv lives at
 `ansible/.venv/` and is excluded from git via the repo's `.gitignore`.
 
 ```bash
-# One-time prerequisites
+# One-time prerequisites — on Ubuntu, venv is NOT part of the default python3
+# install; skipping this fails with "ensurepip is not available"
 sudo apt install -y python3-venv python3-pip     # Ubuntu
 sudo dnf install -y python3 python3-pip          # RHEL (venv ships with python3)
 
@@ -254,7 +255,16 @@ OS-aware branches (`when: ansible_facts['os_family']`):
 
 - **thefuck** — Ubuntu installs the native `thefuck` apt package instead of
   pip (avoids PEP 668 "externally managed environment" errors on Ubuntu
-  23.04+).
+  23.04+). The 24.04 package (3.29) is broken against noble's own Python 3.12
+  (`from imp import load_source`; `imp` was removed in 3.12 and upstream's
+  fix never shipped), so the task also patches `conf.py`/`types.py` with an
+  importlib-based `load_source` shim — verified against the noble package on
+  Python 3.12, idempotent, and works offline.
+- **Homebrew** — additionally skipped when the play runs as **root**:
+  Homebrew hard-refuses root installs with no override (hit on a root-managed
+  Ubuntu node). Run the playbook as a regular sudo-capable user if you want
+  brew. Note that a failed brew task previously aborted the play before the
+  fonts/pomo tasks ran — with the skip in place the play completes.
 - **bat** — Ubuntu's package names the binary `batcat` (Debian name clash),
   so the task also symlinks `/usr/local/bin/bat` → `/usr/bin/batcat`;
   without it the `command -v bat` guards in bashrc/aliases would never fire.
