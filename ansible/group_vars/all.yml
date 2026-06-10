@@ -2,6 +2,28 @@
 # Where the dotfiles repo lives on the target machine.
 dotfiles_dir: "{{ ansible_facts.env.HOME }}/dotfiles"
 
+# --- Air-gapped (offline) mode ---
+# When true, every download is taken from offline_dir on the CONTROL node
+# instead of the internet. Stage the artifacts first by running
+# fetch-offline.yml on a machine with internet access. Enabled per-group in
+# group_vars/airgapped.yml.
+offline: false
+offline_dir: "{{ playbook_dir }}/offline"
+
+# Packages bundled as RPMs for offline installs (with their full dependency
+# closure, resolved by fetch-offline.yml on a matching RHEL release).
+offline_rpm_packages:
+  - curl
+  - wget
+  - tar
+  - unzip
+  - xz
+  - git
+  - tmux
+  - python3-pip
+  - python3-devel
+  - bat
+
 # Scripts from cmd/ linked into ~/.local/bin (pomo.bak and test are skipped).
 cmd_scripts:
   - goggle_ws
@@ -39,5 +61,13 @@ nerd_font_url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download
 brew_prefix: /home/linuxbrew/.linuxbrew
 brew_install_url: "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
 
-# tmux plugin manager (needed by tmux.conf on both OSes)
+# dysk (install/rhel/install-dysk)
+dysk_url: "https://dystroy.org/dysk/download/x86_64-linux/dysk"
+
+# tmux plugins (needed by tmux.conf on both OSes); online installs clone TPM
+# and let `prefix + I` fetch the rest, offline installs stage all three.
 tpm_repo: "https://github.com/tmux-plugins/tpm"
+tmux_plugins:
+  - { name: tpm, repo: "https://github.com/tmux-plugins/tpm" }
+  - { name: tmux-resurrect, repo: "https://github.com/tmux-plugins/tmux-resurrect" }
+  - { name: tmux-continuum, repo: "https://github.com/tmux-plugins/tmux-continuum" }

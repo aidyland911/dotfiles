@@ -5,6 +5,15 @@
 - name: Download dysk to /usr/local/bin
   become: true
   ansible.builtin.get_url:
-    url: https://dystroy.org/dysk/download/x86_64-linux/dysk
+    url: "{{ dysk_url }}"
     dest: /usr/local/bin/dysk
     mode: "0755"
+  when: not offline
+
+- name: Install staged dysk binary (offline)
+  become: true
+  ansible.builtin.copy:
+    src: "{{ offline_dir }}/dysk"
+    dest: /usr/local/bin/dysk
+    mode: "0755"
+  when: offline

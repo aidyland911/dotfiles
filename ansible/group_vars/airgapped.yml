@@ -1,0 +1,5 @@
+---
+# Hosts in the [airgapped] inventory group have no internet access: all
+# downloads come from ansible/offline/ on the control node, staged beforehand
+# by fetch-offline.yml.
+offline: true

@@ -1,0 +1,79 @@
+---
+# Stage every internet download needed by rhel.yml into ansible/offline/ so
+# the playbook can then run against air-gapped hosts (offline: true).
+#
+# Run this ON A MACHINE WITH INTERNET ACCESS and the same RHEL release as the
+# air-gapped targets (e.g. the jumpbox), then run rhel.yml --limit airgapped:
+#
+#   ansible-playbook -i inventory.ini fetch-offline.yml
+#
+# The RPM bundle is resolved against THIS machine's dnf metadata, which is why
+# the releases must match. offline/ is git-ignored.
+
+- name: Stage offline artifacts for air-gapped installs
+  hosts: localhost
+  connection: local
+  become: false
+
+  tasks:
+    - name: Ensure offline directory exists
+      ansible.builtin.file:
+        path: "{{ offline_dir }}"
+        state: directory
+        mode: "0755"
+
+    - name: Download tool archives and binaries
+      ansible.builtin.get_url:
+        url: "{{ item.url }}"
+        dest: "{{ offline_dir }}/{{ item.dest }}"
+        mode: "0644"
+      loop:
+        - { url: "{{ shellcheck_url }}", dest: "shellcheck-{{ shellcheck_version }}.tar.xz" }
+        - { url: "{{ ncdu_url }}", dest: "ncdu.tar.gz" }
+        - { url: "{{ figurine_url }}", dest: "figurine.tar.gz" }
+        - { url: "{{ dysk_url }}", dest: "dysk" }
+        - { url: "{{ tealdeer_url }}", dest: "tealdeer" }
+        - { url: "{{ tldr_pages_url }}", dest: "tldr.zip" }
+
+    - name: Clone tmux plugins (TPM cannot fetch them on an air-gapped host)
+      ansible.builtin.git:
+        repo: "{{ item.repo }}"
+        dest: "{{ offline_dir }}/tmux-plugins/{{ item.name }}"
+      loop: "{{ tmux_plugins }}"
+
+    - name: Download thefuck wheels for offline pip install
+      ansible.builtin.command:
+        cmd: "pip3 download thefuck -d {{ offline_dir }}/wheels"
+        creates: "{{ offline_dir }}/wheels"
+
+    - name: Install dnf download plugin
+      become: true
+      ansible.builtin.dnf:
+        name: dnf-plugins-core
+        state: present
+
+    - name: Enable EPEL repository (bat lives there)
+      become: true
+      ansible.builtin.dnf:
+        name: "{{ epel_release_url }}"
+        state: present
+        disable_gpg_check: true
+
+    - name: Download RPM bundle with full dependency closure
+      ansible.builtin.shell:
+        cmd: >
+          dnf download --resolve --alldeps
+          --destdir '{{ offline_dir }}/rpms'
+          {{ offline_rpm_packages | join(' ') }}
+          && touch '{{ offline_dir }}/rpms/.complete'
+        creates: "{{ offline_dir }}/rpms/.complete"
+
+    - name: Show what was staged
+      ansible.builtin.command:
+        cmd: "du -sh {{ offline_dir }}"
+      register: offline_size
+      changed_when: false
+
+    - name: Report staged size
+      ansible.builtin.debug:
+        msg: "Staged offline artifacts: {{ offline_size.stdout }}"

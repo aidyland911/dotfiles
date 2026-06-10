@@ -7,11 +7,12 @@
     path: /usr/local/bin/figurine
   register: figurine_bin
 
+# Online: download on the target. Offline: extract the staged archive.
 - name: Download and extract figurine
   ansible.builtin.unarchive:
-    src: "{{ figurine_url }}"
+    src: "{{ (offline_dir ~ '/figurine.tar.gz') if offline else figurine_url }}"
     dest: /tmp
-    remote_src: true
+    remote_src: "{{ not offline }}"
   when: not figurine_bin.stat.exists
 
 - name: Install figurine binary to /usr/local/bin

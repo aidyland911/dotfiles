@@ -11,8 +11,19 @@
       - tmux
       - git
     state: present
+  when: not offline  # offline: provided by the staged RPM bundle
 
 - name: Clone TPM (tmux plugin manager)
   ansible.builtin.git:
     repo: "{{ tpm_repo }}"
     dest: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"
+  when: not offline
+
+# Offline targets can't reach GitHub, so `prefix + I` would fail too — copy
+# TPM and the plugins tmux.conf uses, pre-staged by fetch-offline.yml.
+- name: Copy staged tmux plugins (offline)
+  ansible.builtin.copy:
+    src: "{{ offline_dir }}/tmux-plugins/"
+    dest: "{{ ansible_facts.env.HOME }}/.tmux/plugins/"
+    mode: preserve
+  when: offline

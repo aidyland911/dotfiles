@@ -2,10 +2,11 @@
 # Replaces install/rhel/install-ncdu: the release tarball contains the ncdu
 # binary at its root, so it is extracted straight into /usr/local/bin.
 
+# Online: download on the target. Offline: extract the staged archive.
 - name: Download and extract ncdu into /usr/local/bin
   become: true
   ansible.builtin.unarchive:
-    src: "{{ ncdu_url }}"
+    src: "{{ (offline_dir ~ '/ncdu.tar.gz') if offline else ncdu_url }}"
     dest: /usr/local/bin
-    remote_src: true
+    remote_src: "{{ not offline }}"
     creates: /usr/local/bin/ncdu

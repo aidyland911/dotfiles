@@ -11,6 +11,15 @@
     url: "{{ tealdeer_url }}"
     dest: /usr/local/bin/tldr
     mode: "0755"
+  when: not offline
+
+- name: Install staged tealdeer binary (offline)
+  become: true
+  ansible.builtin.copy:
+    src: "{{ offline_dir }}/tealdeer"
+    dest: /usr/local/bin/tldr
+    mode: "0755"
+  when: offline
 
 - name: Ensure tealdeer cache directory exists
   ansible.builtin.file:
@@ -18,9 +27,10 @@
     state: directory
     mode: "0755"
 
+# Online: download on the target. Offline: extract the staged zip.
 - name: Download and extract tldr pages into the cache
   ansible.builtin.unarchive:
-    src: "{{ tldr_pages_url }}"
+    src: "{{ (offline_dir ~ '/tldr.zip') if offline else tldr_pages_url }}"
     dest: "{{ ansible_facts.env.HOME }}/.cache/tealdeer/tldr-pages"
-    remote_src: true
+    remote_src: "{{ not offline }}"
     creates: "{{ ansible_facts.env.HOME }}/.cache/tealdeer/tldr-pages/pages"

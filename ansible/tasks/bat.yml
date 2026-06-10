@@ -5,15 +5,19 @@
 # original appended to ~/.bashrc already lives in the repo's bashrc (guarded
 # so it only activates when bat is present).
 
+# Offline targets get bat from the staged RPM bundle (rhel.yml pre_tasks),
+# so both tasks here are online-only.
 - name: Enable EPEL repository
   become: true
   ansible.builtin.dnf:
     name: "{{ epel_release_url }}"
     state: present
     disable_gpg_check: true
+  when: not offline
 
 - name: Install bat from EPEL
   become: true
   ansible.builtin.dnf:
     name: bat
     state: present
+  when: not offline

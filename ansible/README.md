@@ -90,6 +90,55 @@ ansible-playbook -i inventory.ini ubuntu.yml -K --tags dotfiles
 Available tags — both: `dotfiles`, `tmux`; RHEL: `thefuck`, `shellcheck`,
 `ncdu`, `bat`, `figurine`, `dysk`, `tealdeer`; Ubuntu: `brew`, `fonts`, `pomo`.
 
+## Air-gapped installs (offline mode)
+
+Hosts in the `[airgapped]` inventory group (e.g. `automation1`) have no
+internet access, so nothing on them can reach GitHub, PyPI, EPEL, or any other
+download source. The playbook handles this with an `offline` flag (set to
+`true` for the group in `group_vars/airgapped.yml`): every download is taken
+from `ansible/offline/` **on the control node** and pushed over SSH instead.
+
+Workflow, from the jumpbox (which has internet and the same RHEL release as
+the targets):
+
+```bash
+cd ~/dotfiles/ansible
+source .venv/bin/activate
+
+# 1. Stage all artifacts into ansible/offline/ (one-time, re-run to refresh)
+ansible-playbook -i inventory.ini fetch-offline.yml
+
+# 2. Install on the air-gapped node(s)
+ansible-playbook -i inventory.ini rhel.yml --limit airgapped
+```
+
+No `-K` needed when the targets are reached as root (as in this lab).
+
+What `fetch-offline.yml` stages:
+
+| Artifact | Used by |
+|---|---|
+| `shellcheck-*.tar.xz`, `ncdu.tar.gz`, `figurine.tar.gz`, `dysk`, `tealdeer`, `tldr.zip` | the matching task files, which switch `unarchive`/`copy` to control-node sources when `offline` |
+| `tmux-plugins/` (TPM + resurrect + continuum clones) | `tasks/tmux.yml` — copied wholesale because `prefix + I` can't clone from GitHub on an air-gapped host |
+| `wheels/` (`pip3 download thefuck`) | `tasks/thefuck.yml` — installed with `pip --no-index --find-links` |
+| `rpms/` (`dnf download --resolve --alldeps` of `offline_rpm_packages`, including bat from EPEL) | `rhel.yml` pre-tasks — copied to the target and installed with `dnf install --disablerepo='*'` |
+
+Notes:
+
+- The RPM bundle is dependency-resolved against the **staging** machine's dnf
+  metadata, which is why the jumpbox must run the same RHEL release as the
+  targets (here: both RHEL 9). Same for the Python wheels (same Python = 3.9).
+- Remote targets also get the dotfiles repo itself pushed from the control
+  node (tarball excluding `.git`, `.venv`, `offline/`) — an air-gapped host
+  can't `git clone` it. Local runs keep using the existing checkout.
+- `ansible/offline/` is git-ignored; expect a few hundred MB after staging
+  (the RPM closure is the bulk of it).
+- Offline mode is implemented for **rhel.yml** only. The Ubuntu playbook's
+  Homebrew installer fundamentally needs internet.
+- The inventory now contains both `localhost` and `[airgapped]`, so use
+  `--limit localhost` / `--limit airgapped` to target one or the other;
+  a bare run with `hosts: all` would try both.
+
 ## Directory layout
 
 ```
@@ -99,9 +148,12 @@ ansible/
 ├── ansible.cfg          # points at inventory.ini, quiet defaults
 ├── inventory.ini        # localhost by default; remote host examples included
 ├── group_vars/
-│   └── all.yml          # all pinned versions/URLs and shared variables
-├── rhel.yml             # RHEL playbook
+│   ├── all.yml          # all pinned versions/URLs and shared variables
+│   └── airgapped.yml    # offline: true for the [airgapped] inventory group
+├── rhel.yml             # RHEL playbook (online or offline)
 ├── ubuntu.yml           # Ubuntu playbook
+├── fetch-offline.yml    # stages downloads into offline/ for air-gapped runs
+├── offline/             # staged artifacts (git-ignored, created by fetch-offline.yml)
 ├── tasks/
 │   ├── dotfiles.yml     # shared: symlinks (replaces install-dotfiles)
 │   ├── tmux.yml         # shared: tmux package + TPM clone

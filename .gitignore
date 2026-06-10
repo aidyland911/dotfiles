@@ -8,4 +8,7 @@ __pycache__/
 
 # Ansible cruft
 *.retry
+
+# Staged downloads for air-gapped installs (fetch-offline.yml)
+ansible/offline/
 .claude/

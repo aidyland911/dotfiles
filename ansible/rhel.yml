@@ -28,6 +28,21 @@
           - xz
           - git
         state: present
+      when: not offline
+
+    - name: Copy staged RPM bundle to the target (offline)
+      become: true
+      ansible.builtin.copy:
+        src: "{{ offline_dir }}/rpms"
+        dest: /tmp/
+      when: offline
+
+    - name: Install staged RPM bundle (offline)
+      become: true
+      ansible.builtin.shell: "dnf install -y --disablerepo='*' /tmp/rpms/*.rpm"
+      register: rpm_bundle
+      changed_when: "'Nothing to do' not in rpm_bundle.stdout"
+      when: offline
 
   tasks:
     - name: Link dotfiles

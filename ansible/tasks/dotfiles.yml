@@ -1,5 +1,32 @@
 ---
 # Replaces install-dotfiles: symlink config files from the repo into $HOME.
+#
+# For remote targets the repo itself is pushed from the control node first
+# (air-gapped hosts can't clone from GitHub). Local runs skip this and use
+# the checkout that's already there.
+
+- name: Create dotfiles archive on the control node
+  delegate_to: localhost
+  ansible.builtin.command:
+    cmd: >
+      tar czf /tmp/dotfiles-sync.tar.gz
+      --exclude=.git --exclude=ansible/.venv --exclude=ansible/offline
+      -C {{ playbook_dir }}/.. .
+  changed_when: false
+  when: ansible_connection | default('ssh') != 'local'
+
+- name: Ensure dotfiles directory exists on the target
+  ansible.builtin.file:
+    path: "{{ dotfiles_dir }}"
+    state: directory
+    mode: "0755"
+  when: ansible_connection | default('ssh') != 'local'
+
+- name: Push dotfiles repo to the target
+  ansible.builtin.unarchive:
+    src: /tmp/dotfiles-sync.tar.gz
+    dest: "{{ dotfiles_dir }}"
+  when: ansible_connection | default('ssh') != 'local'
 
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:

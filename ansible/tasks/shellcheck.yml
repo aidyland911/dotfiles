@@ -8,11 +8,13 @@
     path: /usr/local/bin/shellcheck
   register: shellcheck_bin
 
+# Online: download from GitHub on the target. Offline: extract the archive
+# staged on the control node by fetch-offline.yml.
 - name: Download and extract ShellCheck
   ansible.builtin.unarchive:
-    src: "{{ shellcheck_url }}"
+    src: "{{ (offline_dir ~ '/shellcheck-' ~ shellcheck_version ~ '.tar.xz') if offline else shellcheck_url }}"
     dest: /tmp
-    remote_src: true
+    remote_src: "{{ not offline }}"
   when: not shellcheck_bin.stat.exists
 
 - name: Install ShellCheck binary to /usr/local/bin

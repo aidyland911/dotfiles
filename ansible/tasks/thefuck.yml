@@ -11,9 +11,25 @@
       - python3-pip
       - python3-devel
     state: present
+  when: not offline  # offline: provided by the staged RPM bundle
 
 - name: Install thefuck via pip
   become: true
   ansible.builtin.pip:
     name: thefuck
     executable: pip3
+  when: not offline
+
+- name: Copy staged thefuck wheels to the target (offline)
+  ansible.builtin.copy:
+    src: "{{ offline_dir }}/wheels/"
+    dest: /tmp/thefuck-wheels/
+  when: offline
+
+- name: Install thefuck from staged wheels (offline)
+  become: true
+  ansible.builtin.pip:
+    name: thefuck
+    executable: pip3
+    extra_args: "--no-index --find-links=/tmp/thefuck-wheels"
+  when: offline
