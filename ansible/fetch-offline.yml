@@ -46,10 +46,12 @@
         cmd: "pip3 download thefuck -d {{ offline_dir }}/wheels"
         creates: "{{ offline_dir }}/wheels"
 
-    - name: Install dnf download plugin
+    - name: Install staging tools (dnf download plugin, createrepo)
       become: true
       ansible.builtin.dnf:
-        name: dnf-plugins-core
+        name:
+          - dnf-plugins-core
+          - createrepo_c
         state: present
 
     - name: Enable EPEL repository (bat lives there)
@@ -67,6 +69,13 @@
           {{ offline_rpm_packages | join(' ') }}
           && touch '{{ offline_dir }}/rpms/.complete'
         creates: "{{ offline_dir }}/rpms/.complete"
+
+    # The target installs from this directory as a real dnf repo
+    # (--repofrompath), so it needs repo metadata.
+    - name: Create repo metadata for the RPM bundle
+      ansible.builtin.command:
+        cmd: "createrepo_c {{ offline_dir }}/rpms"
+        creates: "{{ offline_dir }}/rpms/repodata/repomd.xml"
 
     - name: Show what was staged
       ansible.builtin.command:

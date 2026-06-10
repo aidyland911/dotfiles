@@ -37,9 +37,19 @@
         dest: /tmp/
       when: offline
 
+    # The staged bundle is used as a local dnf repo and only the wanted
+    # packages are requested — dnf then resolves minimally against what is
+    # already installed. Installing every RPM in the bundle instead would
+    # force base-library upgrades (systemd-libs, ...) that cannot complete
+    # with repos disabled and trip dnf's protected-package check.
     - name: Install staged RPM bundle (offline)
       become: true
-      ansible.builtin.shell: "dnf install -y --disablerepo='*' /tmp/rpms/*.rpm"
+      ansible.builtin.shell: >-
+        dnf install -y --nogpgcheck
+        --disablerepo='*'
+        --repofrompath=offline,file:///tmp/rpms
+        --enablerepo=offline
+        {{ offline_rpm_packages | join(' ') }}
       register: rpm_bundle
       changed_when: "'Nothing to do' not in rpm_bundle.stdout"
       when: offline

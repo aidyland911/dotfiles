@@ -121,7 +121,7 @@ What `fetch-offline.yml` stages:
 | `shellcheck-*.tar.xz`, `ncdu.tar.gz`, `figurine.tar.gz`, `dysk`, `tealdeer`, `tldr.zip` | the matching task files, which switch `unarchive`/`copy` to control-node sources when `offline` |
 | `tmux-plugins/` (TPM + resurrect + continuum clones) | `tasks/tmux.yml` — copied wholesale because `prefix + I` can't clone from GitHub on an air-gapped host |
 | `wheels/` (`pip3 download thefuck`) | `tasks/thefuck.yml` — installed with `pip --no-index --find-links` |
-| `rpms/` (`dnf download --resolve --alldeps` of `offline_rpm_packages`, including bat from EPEL) | `rhel.yml` pre-tasks — copied to the target and installed with `dnf install --disablerepo='*'` |
+| `rpms/` (`dnf download --resolve --alldeps` of `offline_rpm_packages`, including bat from EPEL, plus `createrepo_c` metadata) | `rhel.yml` pre-tasks — copied to the target and used as a **local dnf repo** (`--repofrompath=offline,file:///tmp/rpms --disablerepo='*'`), requesting only the wanted packages so dnf resolves minimally against what's installed. Installing all bundle RPMs directly was the first attempt; it failed on automation1 because the bundle's newer base libs (systemd-libs, …) forced an upgrade chain that, with repos disabled, dnf could only complete by removing protected systemd. |
 
 Notes:
 
