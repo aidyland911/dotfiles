@@ -13,20 +13,23 @@
       --exclude=.git --exclude=ansible/.venv --exclude=ansible/offline
       -C {{ playbook_dir }}/.. .
   changed_when: false
-  when: ansible_connection | default('ssh') != 'local'
+  # The hostvars lookup is required on this delegated task: bare
+  # ansible_connection evaluates as the DELEGATED host's connection (local)
+  # and would always skip this, leaving no archive for the push below.
+  when: hostvars[inventory_hostname]['ansible_connection'] | default('ssh') != 'local'
 
 - name: Ensure dotfiles directory exists on the target
   ansible.builtin.file:
     path: "{{ dotfiles_dir }}"
     state: directory
     mode: "0755"
-  when: ansible_connection | default('ssh') != 'local'
+  when: hostvars[inventory_hostname]['ansible_connection'] | default('ssh') != 'local'
 
 - name: Push dotfiles repo to the target
   ansible.builtin.unarchive:
     src: /tmp/dotfiles-sync.tar.gz
     dest: "{{ dotfiles_dir }}"
-  when: ansible_connection | default('ssh') != 'local'
+  when: hostvars[inventory_hostname]['ansible_connection'] | default('ssh') != 'local'
 
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:
