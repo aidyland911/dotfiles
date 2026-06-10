@@ -38,6 +38,34 @@
       ansible.builtin.import_tasks: tasks/tmux.yml
       tags: tmux
 
+    - name: Install thefuck
+      ansible.builtin.import_tasks: tasks/thefuck.yml
+      tags: thefuck
+
+    - name: Install ShellCheck
+      ansible.builtin.import_tasks: tasks/shellcheck.yml
+      tags: shellcheck
+
+    - name: Install ncdu
+      ansible.builtin.import_tasks: tasks/ncdu.yml
+      tags: ncdu
+
+    - name: Install bat
+      ansible.builtin.import_tasks: tasks/bat.yml
+      tags: bat
+
+    - name: Install figurine and SSH banner
+      ansible.builtin.import_tasks: tasks/figurine.yml
+      tags: figurine
+
+    - name: Install dysk
+      ansible.builtin.import_tasks: tasks/dysk.yml
+      tags: dysk
+
+    - name: Install tealdeer (tldr)
+      ansible.builtin.import_tasks: tasks/tealdeer.yml
+      tags: tealdeer
+
     - name: Install Homebrew
       ansible.builtin.import_tasks: tasks/brew.yml
       tags: brew

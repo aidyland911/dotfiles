@@ -1,23 +1,40 @@
 ---
-# Replaces install/rhel/install-bat. The original downloaded a hardcoded
-# EPEL 10 RPM, which fails on RHEL 9; instead, enable the EPEL repo matching
-# the host's major version and install bat from it. The MANPAGER export the
-# original appended to ~/.bashrc already lives in the repo's bashrc (guarded
-# so it only activates when bat is present).
+# Replaces install/rhel/install-bat; now also covers Ubuntu. The original
+# downloaded a hardcoded EPEL 10 RPM, which fails on RHEL 9; instead, enable
+# the EPEL repo matching the host's major version and install bat from it.
+# The MANPAGER export the original appended to ~/.bashrc already lives in the
+# repo's bashrc (guarded so it only activates when bat is present).
+#
+# Offline RHEL targets get bat from the staged RPM bundle (rhel.yml pre_tasks).
 
-# Offline targets get bat from the staged RPM bundle (rhel.yml pre_tasks),
-# so both tasks here are online-only.
-- name: Enable EPEL repository
+- name: Enable EPEL repository (RHEL)
   become: true
   ansible.builtin.dnf:
     name: "{{ epel_release_url }}"
     state: present
     disable_gpg_check: true
-  when: not offline
+  when: ansible_facts['os_family'] == 'RedHat' and not offline
 
-- name: Install bat from EPEL
+- name: Install bat from EPEL (RHEL)
   become: true
   ansible.builtin.dnf:
     name: bat
     state: present
-  when: not offline
+  when: ansible_facts['os_family'] == 'RedHat' and not offline
+
+# Ubuntu names the binary batcat (a Debian name clash with another package),
+# so add a `bat` symlink — the bashrc guard checks `command -v bat`.
+- name: Install bat (Ubuntu)
+  become: true
+  ansible.builtin.apt:
+    name: bat
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Symlink bat to batcat (Ubuntu)
+  become: true
+  ansible.builtin.file:
+    src: /usr/bin/batcat
+    dest: /usr/local/bin/bat
+    state: link
+  when: ansible_facts['os_family'] == 'Debian'

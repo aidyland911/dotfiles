@@ -87,8 +87,9 @@ ansible-playbook -i inventory.ini rhel.yml -K --tags shellcheck,tealdeer
 ansible-playbook -i inventory.ini ubuntu.yml -K --tags dotfiles
 ```
 
-Available tags — both: `dotfiles`, `tmux`; RHEL: `thefuck`, `shellcheck`,
-`ncdu`, `bat`, `figurine`, `dysk`, `tealdeer`; Ubuntu: `brew`, `fonts`, `pomo`.
+Available tags — both playbooks: `dotfiles`, `tmux`, `thefuck`, `shellcheck`,
+`ncdu`, `bat`, `figurine`, `dysk`, `tealdeer`, `pomo`; Ubuntu only: `brew`,
+`fonts`.
 
 ## Air-gapped installs (offline mode)
 
@@ -233,6 +234,20 @@ playbooks (it uses the generic `package` module). After the first run, press
 | `install-figurine` | `tasks/figurine.yml` | Downloads/extracts the pinned release (`v1.3.0`, which unpacks to `/tmp/deploy/`), installs the binary, and writes the same `/etc/profile.d/hostname-banner.sh` login banner via `copy: content:`. |
 | `install-dysk` | `tasks/dysk.yml` | One `get_url` task to `/usr/local/bin/dysk` with mode `0755`. `get_url` skips the download when the file exists. |
 | `install-tldr` | `tasks/tealdeer.yml` | **Changed:** the original installed a Fedora **43** RPM, which is incompatible with RHEL 9 (needs newer glibc/rpm), and tealdeer isn't packaged in EPEL at all. Now the upstream static musl binary is installed as `/usr/local/bin/tldr` — runs on any RHEL version. The tldr cache is still seeded by unzipping `tldr.zip` into `~/.cache/tealdeer/tldr-pages` (kept because `tldr --update` can fail behind proxies); cache tasks run as you, so no `SUDO_USER`/`chown` gymnastics are needed. |
+
+### Ubuntu tool parity (added 2026-06-10)
+
+`ubuntu.yml` now installs the same tool set as `rhel.yml`. Five task files
+(`shellcheck`, `ncdu`, `figurine`, `dysk`, `tealdeer`) are distro-agnostic —
+static binaries into `/usr/local/bin` — and are imported unchanged. Two needed
+OS-aware branches (`when: ansible_facts['os_family']`):
+
+- **thefuck** — Ubuntu installs the native `thefuck` apt package instead of
+  pip (avoids PEP 668 "externally managed environment" errors on Ubuntu
+  23.04+).
+- **bat** — Ubuntu's package names the binary `batcat` (Debian name clash),
+  so the task also symlinks `/usr/local/bin/bat` → `/usr/bin/batcat`;
+  without it the `command -v bat` guards in bashrc/aliases would never fire.
 
 ### Ubuntu: `install/ubuntu/*`
 

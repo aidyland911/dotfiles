@@ -1,9 +1,12 @@
 ---
-# Replaces install/rhel/install-thefuck. The original also appended
-# `eval "$(thefuck --alias)"` and `alias fk=fuck` to ~/.bashrc; those lines
-# already live in the repo's aliases file, so only the tool is installed here.
+# Replaces install/rhel/install-thefuck; now also covers Ubuntu. The original
+# also appended `eval "$(thefuck --alias)"` and `alias fk=fuck` to ~/.bashrc;
+# those lines already live in the repo's aliases file (guarded), so only the
+# tool is installed here.
+#
+# RHEL installs via pip (no RPM exists); Ubuntu has a native apt package.
 
-- name: Install Python and pip
+- name: Install Python and pip (RHEL)
   become: true
   ansible.builtin.dnf:
     name:
@@ -11,14 +14,14 @@
       - python3-pip
       - python3-devel
     state: present
-  when: not offline  # offline: provided by the staged RPM bundle
+  when: ansible_facts['os_family'] == 'RedHat' and not offline
 
-- name: Install thefuck via pip
+- name: Install thefuck via pip (RHEL)
   become: true
   ansible.builtin.pip:
     name: thefuck
     executable: pip3
-  when: not offline
+  when: ansible_facts['os_family'] == 'RedHat' and not offline
 
 - name: Copy staged thefuck wheels to the target (offline)
   ansible.builtin.copy:
@@ -33,3 +36,10 @@
     executable: pip3
     extra_args: "--no-index --find-links=/tmp/thefuck-wheels"
   when: offline
+
+- name: Install thefuck (Ubuntu)
+  become: true
+  ansible.builtin.apt:
+    name: thefuck
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
