@@ -1,2 +1,8 @@
 # Ansible for the dotfiles playbooks — install inside a venv, see README.md
-ansible>=9
+#
+# RHEL 9 ships Python 3.9, and ansible 9+ needs Python >= 3.10, so these
+# markers pick the newest ansible the machine's Python can actually run:
+#   Python >= 3.10 (Ubuntu 22.04+, RHEL 10) -> ansible 9+
+#   Python 3.9     (RHEL 9 default)         -> ansible 8.x (ansible-core 2.15)
+ansible>=9 ; python_version >= "3.10"
+ansible>=8,<9 ; python_version < "3.10"

@@ -43,6 +43,24 @@ Deactivate with `deactivate`; rebuild from scratch by deleting `.venv/` and
 repeating the steps above. To upgrade Ansible later:
 `pip install --upgrade ansible` inside the activated venv.
 
+### Python version note (RHEL 9)
+
+RHEL 9's default `python3` is 3.9, but ansible 9+ requires Python >= 3.10.
+`requirements.txt` handles this with environment markers: on Python 3.9 it
+installs ansible 8.x (ansible-core 2.15, still fully supports these playbooks),
+on Python >= 3.10 it installs ansible 9+. Nothing to do — `pip install -r
+requirements.txt` just works on both.
+
+If you want a current ansible on RHEL 9 anyway, build the venv from a newer
+interpreter from AppStream:
+
+```bash
+sudo dnf install -y python3.12
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
 ## Quick start
 
 ```bash
