@@ -65,3 +65,7 @@
     - name: Install tealdeer (tldr)
       ansible.builtin.import_tasks: tasks/tealdeer.yml
       tags: tealdeer
+
+    - name: Install pomo
+      ansible.builtin.import_tasks: tasks/pomo.yml
+      tags: pomo

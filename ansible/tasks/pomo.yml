@@ -1,7 +1,12 @@
 ---
 # Replaces install/ubuntu/pomo/install-pomo.sh: copies the pomo binary into
 # ~/.local/bin and its vars file into ~/.cache/pomo. tmux.conf shows the
-# pomodoro timer in the status bar via `pomo`.
+# pomodoro timer in the status bar via `pomo`, so BOTH playbooks run this
+# (the install/ubuntu/ path is historical).
+#
+# The binary (rwxrob/pomo v0.2.5, static Go build) cannot be downloaded
+# anymore — upstream deleted it. The repo copy is the source of truth;
+# cmd/pomo/pomo-backup.tar.gz also holds the vendored source for rebuilding.
 
 - name: Ensure pomo directories exist
   ansible.builtin.file:
