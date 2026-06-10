@@ -1,0 +1,12 @@
+---
+# Replaces install/rhel/install-bat. The original also appended the MANPAGER
+# export to ~/.bashrc; that export already lives in the repo's bashrc (now
+# guarded so it only activates when bat is present), so only the RPM is
+# installed here.
+
+- name: Install bat from EPEL RPM
+  become: true
+  ansible.builtin.dnf:
+    name: "{{ bat_rpm_url }}"
+    state: present
+    disable_gpg_check: true

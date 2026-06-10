@@ -1,0 +1,67 @@
+---
+# RHEL workstation setup.
+# Converts: install-dotfiles + everything under install/rhel/.
+#
+#   ansible-playbook rhel.yml -K
+#
+# Plays run as the login user; tasks that need root use `become: true`
+# individually, so ~ and ansible_env.HOME always mean YOUR home.
+
+- name: Provision RHEL machine with dotfiles and tools
+  hosts: all
+  become: false
+
+  pre_tasks:
+    - name: Verify this is a RHEL-family system
+      ansible.builtin.assert:
+        that: ansible_facts['os_family'] == 'RedHat'
+        fail_msg: "This playbook targets RHEL-family systems. Use ubuntu.yml for Debian-family hosts."
+
+    - name: Install base packages needed by later tasks
+      become: true
+      ansible.builtin.dnf:
+        name:
+          - curl
+          - wget
+          - tar
+          - unzip
+          - xz
+          - git
+        state: present
+
+  tasks:
+    - name: Link dotfiles
+      ansible.builtin.import_tasks: tasks/dotfiles.yml
+      tags: dotfiles
+
+    - name: Set up tmux and TPM
+      ansible.builtin.import_tasks: tasks/tmux.yml
+      tags: tmux
+
+    - name: Install thefuck
+      ansible.builtin.import_tasks: tasks/thefuck.yml
+      tags: thefuck
+
+    - name: Install ShellCheck
+      ansible.builtin.import_tasks: tasks/shellcheck.yml
+      tags: shellcheck
+
+    - name: Install ncdu
+      ansible.builtin.import_tasks: tasks/ncdu.yml
+      tags: ncdu
+
+    - name: Install bat
+      ansible.builtin.import_tasks: tasks/bat.yml
+      tags: bat
+
+    - name: Install figurine and SSH banner
+      ansible.builtin.import_tasks: tasks/figurine.yml
+      tags: figurine
+
+    - name: Install dysk
+      ansible.builtin.import_tasks: tasks/dysk.yml
+      tags: dysk
+
+    - name: Install tealdeer (tldr)
+      ansible.builtin.import_tasks: tasks/tealdeer.yml
+      tags: tealdeer

@@ -1,0 +1,2 @@
+# Ansible for the dotfiles playbooks — install inside a venv, see README.md
+ansible>=9

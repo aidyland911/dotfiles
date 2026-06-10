@@ -1,0 +1,41 @@
+---
+# Where the dotfiles repo lives on the target machine.
+dotfiles_dir: "{{ ansible_env.HOME }}/dotfiles"
+
+# Scripts from cmd/ linked into ~/.local/bin (pomo.bak and test are skipped).
+cmd_scripts:
+  - goggle_ws
+  - newx
+  - tail_status
+  - tail_toggle
+  - toggle_ws
+
+# --- Pinned versions / URLs (carried over from the original shell scripts) ---
+
+# ShellCheck (install/rhel/install-ShellCheck.sh)
+shellcheck_version: v0.10.0
+shellcheck_url: "https://github.com/koalaman/shellcheck/releases/download/{{ shellcheck_version }}/shellcheck-{{ shellcheck_version }}.linux.x86_64.tar.xz"
+
+# ncdu (install/rhel/install-ncdu)
+ncdu_url: "https://dev.yorhel.nl/download/ncdu-2.3-linux-x86_64.tar.gz"
+
+# bat (install/rhel/install-bat)
+bat_rpm_url: "https://rpmfind.net/linux/epel/10.0/Everything/x86_64/Packages/b/bat-0.24.0-11.el10_0.x86_64.rpm"
+
+# figurine (install/rhel/install-figurine)
+figurine_version: v1.3.0
+figurine_url: "https://github.com/arsham/figurine/releases/download/{{ figurine_version }}/figurine_linux_amd64_{{ figurine_version }}.tar.gz"
+
+# tealdeer / tldr (install/rhel/install-tldr)
+tealdeer_rpm_url: "https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/Packages/t/tealdeer-1.7.2-2.fc43.x86_64.rpm"
+tldr_pages_url: "https://github.com/tldr-pages/tldr/releases/latest/download/tldr.zip"
+
+# JetBrainsMono Nerd Font (install/ubuntu/install-fonts)
+nerd_font_url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz"
+
+# Homebrew (install/ubuntu/install-brew)
+brew_prefix: /home/linuxbrew/.linuxbrew
+brew_install_url: "https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh"
+
+# tmux plugin manager (needed by tmux.conf on both OSes)
+tpm_repo: "https://github.com/tmux-plugins/tpm"

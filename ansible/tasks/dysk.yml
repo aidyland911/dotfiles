@@ -1,0 +1,10 @@
+---
+# Replaces install/rhel/install-dysk. get_url skips the download when the
+# file already exists (force is false by default), so this is idempotent.
+
+- name: Download dysk to /usr/local/bin
+  become: true
+  ansible.builtin.get_url:
+    url: https://dystroy.org/dysk/download/x86_64-linux/dysk
+    dest: /usr/local/bin/dysk
+    mode: "0755"

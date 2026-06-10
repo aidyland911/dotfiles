@@ -1,0 +1,41 @@
+---
+# Replaces install/rhel/install-figurine: installs the figurine binary and a
+# /etc/profile.d script that prints the hostname as a banner on login.
+
+- name: Check if figurine is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/figurine
+  register: figurine_bin
+
+- name: Download and extract figurine
+  ansible.builtin.unarchive:
+    src: "{{ figurine_url }}"
+    dest: /tmp
+    remote_src: true
+  when: not figurine_bin.stat.exists
+
+- name: Install figurine binary to /usr/local/bin
+  become: true
+  ansible.builtin.copy:
+    src: /tmp/deploy/figurine
+    dest: /usr/local/bin/figurine
+    mode: "0755"
+    remote_src: true
+  when: not figurine_bin.stat.exists
+
+- name: Clean up extracted files
+  ansible.builtin.file:
+    path: /tmp/deploy
+    state: absent
+  when: not figurine_bin.stat.exists
+
+- name: Install SSH login banner script
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/profile.d/hostname-banner.sh
+    mode: "0755"
+    content: |
+      #!/bin/bash
+      echo ""
+      /usr/local/bin/figurine -f "3d.flf" "$HOSTNAME"
+      echo ""

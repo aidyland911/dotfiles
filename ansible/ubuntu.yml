@@ -1,0 +1,55 @@
+---
+# Ubuntu workstation setup.
+# Converts: install-dotfiles + everything under install/ubuntu/.
+#
+#   ansible-playbook ubuntu.yml -K
+#
+# Plays run as the login user; tasks that need root use `become: true`
+# individually, so ~ and ansible_env.HOME always mean YOUR home.
+
+- name: Provision Ubuntu machine with dotfiles and tools
+  hosts: all
+  become: false
+
+  pre_tasks:
+    - name: Verify this is a Debian-family system
+      ansible.builtin.assert:
+        that: ansible_facts['os_family'] == 'Debian'
+        fail_msg: "This playbook targets Ubuntu/Debian systems. Use rhel.yml for RHEL-family hosts."
+
+    - name: Install base packages needed by later tasks
+      become: true
+      ansible.builtin.apt:
+        name:
+          - curl
+          - tar
+          - unzip
+          - xz-utils
+          - git
+        state: present
+        update_cache: true
+
+  tasks:
+    - name: Link dotfiles
+      ansible.builtin.import_tasks: tasks/dotfiles.yml
+      tags: dotfiles
+
+    - name: Set up tmux and TPM
+      ansible.builtin.import_tasks: tasks/tmux.yml
+      tags: tmux
+
+    - name: Install Homebrew
+      ansible.builtin.import_tasks: tasks/brew.yml
+      tags: brew
+
+    - name: Install JetBrainsMono Nerd Font
+      ansible.builtin.import_tasks: tasks/fonts.yml
+      tags: fonts
+
+    - name: Install pomo
+      ansible.builtin.import_tasks: tasks/pomo.yml
+      tags: pomo
+
+  handlers:
+    - name: Refresh font cache
+      ansible.builtin.command: fc-cache -f

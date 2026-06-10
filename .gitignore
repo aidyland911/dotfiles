@@ -1,0 +1,11 @@
+# Python virtualenv for Ansible (see ansible/README.md)
+.venv/
+ansible/.venv/
+
+# Python cruft
+__pycache__/
+*.pyc
+
+# Ansible cruft
+*.retry
+.claude/

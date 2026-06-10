@@ -1,0 +1,18 @@
+---
+# Replaces install/ubuntu/install-tmux. The original wrote ~/.tmux.conf inline;
+# here the config comes from the repo symlink (tasks/dotfiles.yml), so this
+# file only installs tmux itself and TPM, which tmux.conf expects at
+# ~/.tmux/plugins/tpm.
+
+- name: Install tmux and git
+  become: true
+  ansible.builtin.package:
+    name:
+      - tmux
+      - git
+    state: present
+
+- name: Clone TPM (tmux plugin manager)
+  ansible.builtin.git:
+    repo: "{{ tpm_repo }}"
+    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"

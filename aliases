@@ -23,9 +23,13 @@ alias ksys='kubectl get pods -n kube-system' # Show system pods
 alias kns='kubectl config set-context --current --namespace=' # Change namespace
 alias kexec='kubectl exec -it' # Execute command in a pod
 alias dot='cd ~/dotfiles/install/rhel/'
-eval "$(thefuck --alias)"
-alias fk=fuck
-export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
+if command -v thefuck >/dev/null 2>&1; then
+    eval "$(thefuck --alias)"
+    alias fk=fuck
+fi
+if command -v bat >/dev/null 2>&1; then
+    export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
+fi
 alias dotrefresh='
     echo "🔼 Committing aliases & bashrc to GitHub..." && \
     cd ~/dotfiles && \

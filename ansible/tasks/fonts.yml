@@ -1,0 +1,25 @@
+---
+# Replaces install/ubuntu/install-fonts: installs the JetBrainsMono Nerd Font
+# into ~/.local/share/fonts and refreshes the font cache.
+
+- name: Install font tooling
+  become: true
+  ansible.builtin.apt:
+    name:
+      - fontconfig
+      - xz-utils
+    state: present
+
+- name: Ensure user font directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.local/share/fonts"
+    state: directory
+    mode: "0755"
+
+- name: Download and extract JetBrainsMono Nerd Font
+  ansible.builtin.unarchive:
+    src: "{{ nerd_font_url }}"
+    dest: "{{ ansible_env.HOME }}/.local/share/fonts"
+    remote_src: true
+    creates: "{{ ansible_env.HOME }}/.local/share/fonts/JetBrainsMonoNerdFont-Regular.ttf"
+  notify: Refresh font cache

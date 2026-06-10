@@ -1,0 +1,31 @@
+---
+# Replaces install/rhel/install-ShellCheck.sh.
+# To upgrade: bump shellcheck_version in group_vars/all.yml and delete
+# /usr/local/bin/shellcheck, then re-run.
+
+- name: Check if ShellCheck is already installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/shellcheck
+  register: shellcheck_bin
+
+- name: Download and extract ShellCheck
+  ansible.builtin.unarchive:
+    src: "{{ shellcheck_url }}"
+    dest: /tmp
+    remote_src: true
+  when: not shellcheck_bin.stat.exists
+
+- name: Install ShellCheck binary to /usr/local/bin
+  become: true
+  ansible.builtin.copy:
+    src: "/tmp/shellcheck-{{ shellcheck_version }}/shellcheck"
+    dest: /usr/local/bin/shellcheck
+    mode: "0755"
+    remote_src: true
+  when: not shellcheck_bin.stat.exists
+
+- name: Clean up extracted files
+  ansible.builtin.file:
+    path: "/tmp/shellcheck-{{ shellcheck_version }}"
+    state: absent
+  when: not shellcheck_bin.stat.exists

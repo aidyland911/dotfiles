@@ -28,5 +28,13 @@ if [ -z "$SSH_AUTH_SOCK" ]; then
     ssh-add ~/.ssh/ansible 2>/dev/null
 fi
 
-export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
+# Pretty man pages via bat (only when bat is installed)
+if command -v bat >/dev/null 2>&1; then
+    export MANPAGER="sh -c 'sed -u -e \"s/\\x1B\[[0-9;]*m//g; s/.\x08//g\" | bat -p -lman'"
+fi
 export PATH=$PATH:/usr/local/bin
+
+# Homebrew (only when installed, e.g. by the Ubuntu Ansible playbook)
+if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi

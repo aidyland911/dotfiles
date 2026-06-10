@@ -1,0 +1,27 @@
+---
+# Replaces install/ubuntu/pomo/install-pomo.sh: copies the pomo binary into
+# ~/.local/bin and its vars file into ~/.cache/pomo. tmux.conf shows the
+# pomodoro timer in the status bar via `pomo`.
+
+- name: Ensure pomo directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ ansible_env.HOME }}/.local/bin"
+    - "{{ ansible_env.HOME }}/.cache/pomo"
+
+- name: Install pomo binary
+  ansible.builtin.copy:
+    src: "{{ dotfiles_dir }}/install/ubuntu/pomo/pomo"
+    dest: "{{ ansible_env.HOME }}/.local/bin/pomo"
+    mode: "0755"
+    remote_src: true
+
+- name: Install pomo vars file
+  ansible.builtin.copy:
+    src: "{{ dotfiles_dir }}/install/ubuntu/pomo/vars"
+    dest: "{{ ansible_env.HOME }}/.cache/pomo/vars"
+    mode: "0644"
+    remote_src: true

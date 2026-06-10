@@ -1,0 +1,23 @@
+---
+# Replaces install/rhel/install-tldr: installs the tealdeer RPM and seeds the
+# tldr page cache manually (tldr --update can fail behind proxies).
+
+- name: Install tealdeer from Fedora RPM
+  become: true
+  ansible.builtin.dnf:
+    name: "{{ tealdeer_rpm_url }}"
+    state: present
+    disable_gpg_check: true
+
+- name: Ensure tealdeer cache directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_env.HOME }}/.cache/tealdeer/tldr-pages"
+    state: directory
+    mode: "0755"
+
+- name: Download and extract tldr pages into the cache
+  ansible.builtin.unarchive:
+    src: "{{ tldr_pages_url }}"
+    dest: "{{ ansible_env.HOME }}/.cache/tealdeer/tldr-pages"
+    remote_src: true
+    creates: "{{ ansible_env.HOME }}/.cache/tealdeer/tldr-pages/pages"
