@@ -163,10 +163,10 @@ playbooks (it uses the generic `package` module). After the first run, press
 | `install-thefuck` | `tasks/thefuck.yml` | dnf installs python3/pip/devel, pip installs `thefuck`. **Dropped:** the blanket `dnf update -y` (a setup playbook shouldn't force a full system upgrade) and the two lines appended to `.bashrc` — `eval "$(thefuck --alias)"` and `alias fk=fuck` already live in the repo `aliases` file (now guarded, see below). |
 | `install-ShellCheck.sh` | `tasks/shellcheck.yml` | Downloads/extracts the pinned release tarball (`v0.10.0`), copies the binary to `/usr/local/bin`, cleans up. Skipped entirely when the binary already exists. To upgrade: bump `shellcheck_version` in `group_vars/all.yml`, delete `/usr/local/bin/shellcheck`, re-run. |
 | `install-ncdu` | `tasks/ncdu.yml` | One `unarchive` task: the release tarball contains the binary at its root, so it extracts straight into `/usr/local/bin` with `creates:` as the idempotency guard. The original's curl-installation fallback logic is unnecessary (curl/tar are in the playbook's base packages). |
-| `install-bat` | `tasks/bat.yml` | `dnf` installs the pinned EPEL 10 RPM by URL (`disable_gpg_check` because it's a direct rpmfind download, matching the original). **Dropped:** appending `MANPAGER` to `.bashrc` — the export already lives in the repo `bashrc` (now guarded). |
+| `install-bat` | `tasks/bat.yml` | **Changed:** the original downloaded a hardcoded EPEL **10** RPM, which fails on RHEL 9 (found during a real run on RHEL 9.4). Now the playbook enables the EPEL repo matching the host's major version (`epel-release-latest-{{ distribution_major_version }}`) and installs `bat` from it — works on RHEL 9 and 10. **Dropped:** appending `MANPAGER` to `.bashrc` — the export already lives in the repo `bashrc` (now guarded). |
 | `install-figurine` | `tasks/figurine.yml` | Downloads/extracts the pinned release (`v1.3.0`, which unpacks to `/tmp/deploy/`), installs the binary, and writes the same `/etc/profile.d/hostname-banner.sh` login banner via `copy: content:`. |
 | `install-dysk` | `tasks/dysk.yml` | One `get_url` task to `/usr/local/bin/dysk` with mode `0755`. `get_url` skips the download when the file exists. |
-| `install-tldr` | `tasks/tealdeer.yml` | dnf installs the pinned Fedora RPM by URL, then seeds the tldr cache by unzipping `tldr.zip` into `~/.cache/tealdeer/tldr-pages` (kept because `tldr --update` can fail behind proxies). The cache tasks run as you, so no `SUDO_USER`/`chown` gymnastics are needed. |
+| `install-tldr` | `tasks/tealdeer.yml` | **Changed:** the original installed a Fedora **43** RPM, which is incompatible with RHEL 9 (needs newer glibc/rpm), and tealdeer isn't packaged in EPEL at all. Now the upstream static musl binary is installed as `/usr/local/bin/tldr` — runs on any RHEL version. The tldr cache is still seeded by unzipping `tldr.zip` into `~/.cache/tealdeer/tldr-pages` (kept because `tldr --update` can fail behind proxies); cache tasks run as you, so no `SUDO_USER`/`chown` gymnastics are needed. |
 
 ### Ubuntu: `install/ubuntu/*`
 
@@ -199,8 +199,8 @@ machine regardless of which tools are installed:
 ## Variables
 
 Everything tunable lives in `group_vars/all.yml`: pinned versions
-(`shellcheck_version`, `figurine_version`), RPM/tarball URLs (`bat_rpm_url`,
-`tealdeer_rpm_url`, `ncdu_url`, `nerd_font_url`, …), the repo location
+(`shellcheck_version`, `figurine_version`), download URLs (`epel_release_url`,
+`tealdeer_url`, `ncdu_url`, `nerd_font_url`, …), the repo location
 (`dotfiles_dir`, defaults to `~/dotfiles`), and the `cmd_scripts` list. Bump a
 version there instead of editing task files.
 
@@ -215,12 +215,8 @@ version there instead of editing task files.
 - `pip3 install thefuck` system-wide may be rejected on very new distros that
   enforce PEP 668 (externally-managed environments). If that happens, switch
   `tasks/thefuck.yml` to `pipx` or add `extra_args: --break-system-packages`.
-- The bat and tealdeer RPM URLs are distro-release-specific (EPEL 10 /
-  Fedora 43), exactly as in the original scripts. On other RHEL releases,
-  update the URLs in `group_vars/all.yml` — or replace both tasks with plain
-  `dnf` packages if you enable EPEL.
-- `dysk` and the tldr `latest` zip are unpinned upstream downloads, same as
-  before.
+- `dysk`, the tealdeer binary, and the tldr `latest` zip are unpinned upstream
+  downloads (tealdeer/tldr by necessity — tealdeer isn't in EPEL).
 - TPM plugins still need a one-time `prefix + I` inside tmux.
 
 ## Verification performed

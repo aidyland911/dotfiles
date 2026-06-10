@@ -19,15 +19,17 @@ shellcheck_url: "https://github.com/koalaman/shellcheck/releases/download/{{ she
 # ncdu (install/rhel/install-ncdu)
 ncdu_url: "https://dev.yorhel.nl/download/ncdu-2.3-linux-x86_64.tar.gz"
 
-# bat (install/rhel/install-bat)
-bat_rpm_url: "https://rpmfind.net/linux/epel/10.0/Everything/x86_64/Packages/b/bat-0.24.0-11.el10_0.x86_64.rpm"
+# bat (install/rhel/install-bat) — installed from EPEL matching the host's
+# RHEL major version (the original hardcoded an EPEL 10 RPM, which fails on RHEL 9)
+epel_release_url: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_facts['distribution_major_version'] }}.noarch.rpm"
 
 # figurine (install/rhel/install-figurine)
 figurine_version: v1.3.0
 figurine_url: "https://github.com/arsham/figurine/releases/download/{{ figurine_version }}/figurine_linux_amd64_{{ figurine_version }}.tar.gz"
 
-# tealdeer / tldr (install/rhel/install-tldr)
-tealdeer_rpm_url: "https://download-ib01.fedoraproject.org/pub/fedora/linux/releases/43/Everything/x86_64/os/Packages/t/tealdeer-1.7.2-2.fc43.x86_64.rpm"
+# tealdeer / tldr (install/rhel/install-tldr) — static musl binary, works on
+# any RHEL (the original used a Fedora 43 RPM, incompatible with RHEL 9)
+tealdeer_url: "https://github.com/dbrgn/tealdeer/releases/latest/download/tealdeer-linux-x86_64-musl"
 tldr_pages_url: "https://github.com/tldr-pages/tldr/releases/latest/download/tldr.zip"
 
 # JetBrainsMono Nerd Font (install/ubuntu/install-fonts)
