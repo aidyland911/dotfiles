@@ -23,11 +23,13 @@
     executable: pip3
   when: ansible_facts['os_family'] == 'RedHat' and not offline
 
+# Offline Ubuntu gets thefuck from the DEB bundle via the apt task below,
+# so the wheels path is RHEL-only.
 - name: Copy staged thefuck wheels to the target (offline)
   ansible.builtin.copy:
     src: "{{ offline_dir }}/wheels/"
     dest: /tmp/thefuck-wheels/
-  when: offline
+  when: offline and ansible_facts['os_family'] == 'RedHat'
 
 - name: Install thefuck from staged wheels (offline)
   become: true
@@ -35,7 +37,7 @@
     name: thefuck
     executable: pip3
     extra_args: "--no-index --find-links=/tmp/thefuck-wheels"
-  when: offline
+  when: offline and ansible_facts['os_family'] == 'RedHat'
 
 - name: Install thefuck (Ubuntu)
   become: true

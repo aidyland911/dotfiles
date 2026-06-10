@@ -11,7 +11,7 @@
       - tmux
       - git
     state: present
-  when: not offline  # offline: provided by the staged RPM bundle
+  when: not offline  # offline: provided by the staged RPM/DEB bundle
 
 - name: Clone TPM (tmux plugin manager)
   ansible.builtin.git:

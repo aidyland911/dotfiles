@@ -28,6 +28,42 @@
           - git
         state: present
         update_cache: true
+      when: not offline
+
+    - name: Copy staged DEB bundle to the target (offline)
+      become: true
+      ansible.builtin.copy:
+        src: "{{ offline_dir }}/debs"
+        dest: /tmp/
+      when: offline
+
+    - name: Configure the bundle as a local apt repo (offline)
+      become: true
+      ansible.builtin.copy:
+        content: "deb [trusted=yes] file:///tmp/debs ./\n"
+        dest: /etc/apt/sources.list.d/offline.list
+        mode: "0644"
+      when: offline
+
+    # Refresh indexes from the local repo only — the regular internet
+    # sources are unreachable on an air-gapped host anyway.
+    - name: Refresh apt indexes from the local repo (offline)
+      become: true
+      ansible.builtin.command: >-
+        apt-get update
+        -o Dir::Etc::sourcelist=sources.list.d/offline.list
+        -o Dir::Etc::sourceparts=/dev/null
+      changed_when: false
+      when: offline
+
+    # Later apt tasks (thefuck, bat, fontconfig) resolve from the same local
+    # repo, so installing the bundle here also pre-satisfies them.
+    - name: Install staged DEB bundle (offline)
+      become: true
+      ansible.builtin.apt:
+        name: "{{ offline_deb_packages }}"
+        state: present
+      when: offline
 
   tasks:
     - name: Link dotfiles

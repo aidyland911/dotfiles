@@ -25,6 +25,20 @@ offline_rpm_packages:
   - python3-devel
   - bat
 
+# Packages bundled as DEBs for offline Ubuntu installs (with their full
+# dependency closure, resolved by fetch-offline.yml on a matching Ubuntu
+# release). Covers the base packages plus everything the apt tasks install.
+# No Homebrew prerequisites: brew cannot be installed offline.
+offline_deb_packages:
+  - tar
+  - unzip
+  - xz-utils
+  - git
+  - tmux
+  - thefuck
+  - bat
+  - fontconfig
+
 # Scripts from cmd/ linked into ~/.local/bin (pomo.bak and test are skipped).
 cmd_scripts:
   - goggle_ws

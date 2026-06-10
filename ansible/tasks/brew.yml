@@ -3,11 +3,15 @@
 # shellenv eval to ~/.bashrc; that now lives in the repo's bashrc behind an
 # "if brew exists" guard, so this file only installs Homebrew itself.
 # The installer must NOT run as root, so no become here.
+#
+# Skipped entirely when offline: the Homebrew installer fundamentally needs
+# internet access (it clones brew and downloads bottles from GitHub).
 
 - name: Check for existing Homebrew install
   ansible.builtin.stat:
     path: "{{ brew_prefix }}/bin/brew"
   register: brew_bin
+  when: not offline
 
 - name: Install Homebrew build prerequisites
   become: true
@@ -20,22 +24,23 @@
       - git
     state: present
     update_cache: true
+  when: not offline
 
 - name: Download Homebrew installer
   ansible.builtin.get_url:
     url: "{{ brew_install_url }}"
     dest: /tmp/brew-install.sh
     mode: "0755"
-  when: not brew_bin.stat.exists
+  when: not offline and not brew_bin.stat.exists
 
 - name: Run Homebrew installer (non-interactive)
   ansible.builtin.command: /bin/bash /tmp/brew-install.sh
   environment:
     NONINTERACTIVE: "1"
-  when: not brew_bin.stat.exists
+  when: not offline and not brew_bin.stat.exists
 
 - name: Clean up installer
   ansible.builtin.file:
     path: /tmp/brew-install.sh
     state: absent
-  when: not brew_bin.stat.exists
+  when: not offline and not brew_bin.stat.exists

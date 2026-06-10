@@ -99,8 +99,11 @@ download source. The playbook handles this with an `offline` flag (set to
 `true` for the group in `group_vars/airgapped.yml`): every download is taken
 from `ansible/offline/` **on the control node** and pushed over SSH instead.
 
-Workflow, from the jumpbox (which has internet and the same RHEL release as
-the targets):
+Both playbooks support offline mode. Staging must happen on an
+internet-connected machine **matching the targets' OS and release**, because
+the package bundles are dependency-resolved against the staging machine's
+metadata: a RHEL stager (the jumpbox) builds the RPM bundle, an Ubuntu stager
+builds the DEB bundle. The distro-agnostic artifacts are staged on either.
 
 ```bash
 cd ~/dotfiles/ansible
@@ -110,19 +113,24 @@ source .venv/bin/activate
 ansible-playbook -i inventory.ini fetch-offline.yml
 
 # 2. Install on the air-gapped node(s)
-ansible-playbook -i inventory.ini rhel.yml --limit airgapped
+ansible-playbook -i inventory.ini rhel.yml --limit automation1
+ansible-playbook -i inventory.ini ubuntu.yml --limit <ubuntu-host>
 ```
 
-No `-K` needed when the targets are reached as root (as in this lab).
+No `-K` needed when the targets are reached as root (as in this lab). Use
+`--limit <host>` rather than `--limit airgapped` when the group mixes RHEL
+and Ubuntu nodes — each playbook asserts its OS family and fails on the
+other's hosts.
 
 What `fetch-offline.yml` stages:
 
 | Artifact | Used by |
 |---|---|
-| `shellcheck-*.tar.xz`, `ncdu.tar.gz`, `figurine.tar.gz`, `dysk`, `tealdeer`, `tldr.zip` | the matching task files, which switch `unarchive`/`copy` to control-node sources when `offline` |
+| `shellcheck-*.tar.xz`, `ncdu.tar.gz`, `figurine.tar.gz`, `dysk`, `tealdeer`, `tldr.zip`, `JetBrainsMono.tar.xz` | the matching task files, which switch `unarchive`/`copy` to control-node sources when `offline` |
 | `tmux-plugins/` (TPM + resurrect + continuum clones) | `tasks/tmux.yml` — copied wholesale because `prefix + I` can't clone from GitHub on an air-gapped host |
-| `wheels/` (`pip3 download thefuck`) | `tasks/thefuck.yml` — installed with `pip --no-index --find-links` |
-| `rpms/` (`dnf download --resolve --alldeps` of `offline_rpm_packages`, including bat from EPEL, plus `createrepo_c` metadata) | `rhel.yml` pre-tasks — copied to the target and used as a **local dnf repo** (`--repofrompath=offline,file:///tmp/rpms --disablerepo='*'`), requesting only the wanted packages so dnf resolves minimally against what's installed. Installing all bundle RPMs directly was the first attempt; it failed on automation1 because the bundle's newer base libs (systemd-libs, …) forced an upgrade chain that, with repos disabled, dnf could only complete by removing protected systemd. |
+| `wheels/` (`pip3 download thefuck`, RHEL stager only) | `tasks/thefuck.yml` — installed with `pip --no-index --find-links` on RHEL targets; Ubuntu targets get thefuck from the DEB bundle instead |
+| `rpms/` (`dnf download --resolve --alldeps` of `offline_rpm_packages`, including bat from EPEL, plus `createrepo_c` metadata; RHEL stager only) | `rhel.yml` pre-tasks — copied to the target and used as a **local dnf repo** (`--repofrompath=offline,file:///tmp/rpms --disablerepo='*'`), requesting only the wanted packages so dnf resolves minimally against what's installed. Installing all bundle RPMs directly was the first attempt; it failed on automation1 because the bundle's newer base libs (systemd-libs, …) forced an upgrade chain that, with repos disabled, dnf could only complete by removing protected systemd. |
+| `debs/` (`apt-get download` of the full `apt-cache depends --recurse` closure of `offline_deb_packages`, plus a `dpkg-scanpackages` index; Ubuntu stager only) | `ubuntu.yml` pre-tasks — copied to the target, registered as a **local apt repo** (`deb [trusted=yes] file:///tmp/debs ./` with `apt-get update` scoped to that one source), then installed with the ordinary `apt` module; the later thefuck/bat/fontconfig apt tasks resolve from the same local repo |
 
 Notes:
 
@@ -139,8 +147,10 @@ Notes:
   can't `git clone` it. Local runs keep using the existing checkout.
 - `ansible/offline/` is git-ignored; expect a few hundred MB after staging
   (the RPM closure is the bulk of it).
-- Offline mode is implemented for **rhel.yml** only. The Ubuntu playbook's
-  Homebrew installer fundamentally needs internet.
+- Offline mode covers both playbooks, with one exception: **Homebrew is
+  skipped when offline** — its installer fundamentally needs internet (it
+  clones brew and downloads bottles from GitHub). Everything else on Ubuntu
+  (full tool set, fonts, pomo, tmux plugins) installs offline.
 - The inventory now contains both `localhost` and `[airgapped]`, so use
   `--limit localhost` / `--limit airgapped` to target one or the other;
   a bare run with `hosts: all` would try both.

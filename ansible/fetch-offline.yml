@@ -1,14 +1,17 @@
 ---
-# Stage every internet download needed by rhel.yml into ansible/offline/ so
-# the playbook can then run against air-gapped hosts (offline: true).
+# Stage every internet download needed by rhel.yml / ubuntu.yml into
+# ansible/offline/ so they can run against air-gapped hosts (offline: true).
 #
-# Run this ON A MACHINE WITH INTERNET ACCESS and the same RHEL release as the
-# air-gapped targets (e.g. the jumpbox), then run rhel.yml --limit airgapped:
+# Run this ON A MACHINE WITH INTERNET ACCESS matching the air-gapped targets:
+#   - a RHEL stager (e.g. the jumpbox) builds the RPM bundle for RHEL targets
+#   - an Ubuntu stager (same release as the targets) builds the DEB bundle
+# The distro-agnostic artifacts (binaries, archives, tmux plugins) are staged
+# on either. Package bundles are dependency-resolved against the STAGING
+# machine's metadata, which is why the releases must match.
 #
 #   ansible-playbook -i inventory.ini fetch-offline.yml
 #
-# The RPM bundle is resolved against THIS machine's dnf metadata, which is why
-# the releases must match. offline/ is git-ignored.
+# offline/ is git-ignored.
 
 - name: Stage offline artifacts for air-gapped installs
   hosts: localhost
@@ -16,11 +19,14 @@
   become: false
 
   tasks:
-    - name: Ensure offline directory exists
+    - name: Ensure offline directories exist
       ansible.builtin.file:
-        path: "{{ offline_dir }}"
+        path: "{{ item }}"
         state: directory
         mode: "0755"
+      loop:
+        - "{{ offline_dir }}"
+        - "{{ offline_dir }}/debs"
 
     - name: Download tool archives and binaries
       ansible.builtin.get_url:
@@ -34,6 +40,7 @@
         - { url: "{{ dysk_url }}", dest: "dysk" }
         - { url: "{{ tealdeer_url }}", dest: "tealdeer" }
         - { url: "{{ tldr_pages_url }}", dest: "tldr.zip" }
+        - { url: "{{ nerd_font_url }}", dest: "JetBrainsMono.tar.xz" }
 
     - name: Clone tmux plugins (TPM cannot fetch them on an air-gapped host)
       ansible.builtin.git:
@@ -41,10 +48,15 @@
         dest: "{{ offline_dir }}/tmux-plugins/{{ item.name }}"
       loop: "{{ tmux_plugins }}"
 
-    - name: Download thefuck wheels for offline pip install
+    # --- RHEL staging branch: RPM bundle + thefuck wheels ---
+    # (wheels are built here too: RHEL installs thefuck via pip with the
+    # target's Python, while Ubuntu uses the native apt package)
+
+    - name: Download thefuck wheels for offline pip install (RHEL stager)
       ansible.builtin.command:
         cmd: "pip3 download thefuck -d {{ offline_dir }}/wheels"
         creates: "{{ offline_dir }}/wheels"
+      when: ansible_facts['os_family'] == 'RedHat'
 
     - name: Install staging tools (dnf download plugin, createrepo)
       become: true
@@ -53,6 +65,7 @@
           - dnf-plugins-core
           - createrepo_c
         state: present
+      when: ansible_facts['os_family'] == 'RedHat'
 
     - name: Enable EPEL repository (bat lives there)
       become: true
@@ -60,6 +73,7 @@
         name: "{{ epel_release_url }}"
         state: present
         disable_gpg_check: true
+      when: ansible_facts['os_family'] == 'RedHat'
 
     - name: Download RPM bundle with full dependency closure
       ansible.builtin.shell:
@@ -69,6 +83,7 @@
           {{ offline_rpm_packages | join(' ') }}
           && touch '{{ offline_dir }}/rpms/.complete'
         creates: "{{ offline_dir }}/rpms/.complete"
+      when: ansible_facts['os_family'] == 'RedHat'
 
     # The target installs from this directory as a real dnf repo
     # (--repofrompath), so it needs repo metadata.
@@ -76,6 +91,32 @@
       ansible.builtin.command:
         cmd: "createrepo_c {{ offline_dir }}/rpms"
         creates: "{{ offline_dir }}/rpms/repodata/repomd.xml"
+      when: ansible_facts['os_family'] == 'RedHat'
+
+    # --- Ubuntu staging branch: DEB bundle ---
+
+    - name: Install staging tools (dpkg-dev for the repo index)
+      become: true
+      ansible.builtin.apt:
+        name: dpkg-dev
+        state: present
+        update_cache: true
+      when: ansible_facts['os_family'] == 'Debian'
+
+    # apt-cache depends --recurse computes the full dependency closure;
+    # dpkg-scanpackages builds the index that lets the target use the
+    # directory as a local apt repo.
+    - name: Download DEB bundle with full dependency closure
+      ansible.builtin.shell:
+        cmd: >
+          apt-get download $(apt-cache depends --recurse --no-recommends
+          --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances
+          {{ offline_deb_packages | join(' ') }} | grep '^\w' | sort -u)
+          && dpkg-scanpackages . /dev/null | gzip > Packages.gz
+          && touch .complete
+        chdir: "{{ offline_dir }}/debs"
+        creates: "{{ offline_dir }}/debs/.complete"
+      when: ansible_facts['os_family'] == 'Debian'
 
     - name: Show what was staged
       ansible.builtin.command:

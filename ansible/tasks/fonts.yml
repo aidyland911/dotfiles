@@ -16,10 +16,11 @@
     state: directory
     mode: "0755"
 
+# Online: download on the target. Offline: extract the staged archive.
 - name: Download and extract JetBrainsMono Nerd Font
   ansible.builtin.unarchive:
-    src: "{{ nerd_font_url }}"
+    src: "{{ (offline_dir ~ '/JetBrainsMono.tar.xz') if offline else nerd_font_url }}"
     dest: "{{ ansible_facts.env.HOME }}/.local/share/fonts"
-    remote_src: true
+    remote_src: "{{ not offline }}"
     creates: "{{ ansible_facts.env.HOME }}/.local/share/fonts/JetBrainsMonoNerdFont-Regular.ttf"
   notify: Refresh font cache
