@@ -89,8 +89,8 @@ ansible-playbook -i inventory.ini ubuntu.yml -K --tags dotfiles
 ```
 
 Available tags — both playbooks: `dotfiles`, `tmux`, `thefuck`, `shellcheck`,
-`ncdu`, `bat`, `figurine`, `dysk`, `tealdeer`, `pomo`; Ubuntu only: `brew`,
-`fonts`.
+`ncdu`, `bat`, `figurine`, `dysk`, `tealdeer`, `inxi`, `duf`, `pomo`;
+Ubuntu only: `brew`, `fonts`.
 
 ## Air-gapped installs (offline mode)
 
@@ -148,6 +148,11 @@ Notes:
   can't `git clone` it. Local runs keep using the existing checkout.
 - `ansible/offline/` is git-ignored; expect a few hundred MB after staging
   (the RPM closure is the bulk of it).
+- The package bundles are guarded by `.complete` marker files, so re-running
+  `fetch-offline.yml` won't pick up changes to `offline_rpm_packages` /
+  `offline_deb_packages`. After editing those lists, delete the marker and
+  re-stage: `rm offline/rpms/.complete` (RHEL) or `rm offline/debs/.complete`
+  (Ubuntu), then re-run `fetch-offline.yml`.
 - Offline mode covers both playbooks, with one exception: **Homebrew is
   skipped when offline** — its installer fundamentally needs internet (it
   clones brew and downloads bottles from GitHub). Everything else on Ubuntu
@@ -268,6 +273,13 @@ OS-aware branches (`when: ansible_facts['os_family']`):
 - **bat** — Ubuntu's package names the binary `batcat` (Debian name clash),
   so the task also symlinks `/usr/local/bin/bat` → `/usr/bin/batcat`;
   without it the `command -v bat` guards in bashrc/aliases would never fire.
+
+### New tools with no original script (added 2026-06-10)
+
+| Tool | Task file | How it's installed |
+|---|---|---|
+| `inxi` (system info) | `tasks/inxi.yml` | Package manager — it's a Perl script with dependencies. RHEL: EPEL (the task enables EPEL itself so `--tags inxi` works standalone); Ubuntu: apt. Offline: from the RPM/DEB bundles. |
+| `duf` (modern df) | `tasks/duf.yml` | Static Go binary from GitHub releases on both OSes (pinned `duf_version` in `group_vars/all.yml`), extracted straight into `/usr/local/bin`. Offline: staged `duf.tar.gz`. |
 
 ### Ubuntu: `install/ubuntu/*`
 

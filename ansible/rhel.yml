@@ -91,6 +91,14 @@
       ansible.builtin.import_tasks: tasks/tealdeer.yml
       tags: tealdeer
 
+    - name: Install inxi
+      ansible.builtin.import_tasks: tasks/inxi.yml
+      tags: inxi
+
+    - name: Install duf
+      ansible.builtin.import_tasks: tasks/duf.yml
+      tags: duf
+
     - name: Install pomo
       ansible.builtin.import_tasks: tasks/pomo.yml
       tags: pomo

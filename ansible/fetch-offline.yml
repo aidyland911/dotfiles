@@ -41,6 +41,7 @@
         - { url: "{{ tealdeer_url }}", dest: "tealdeer" }
         - { url: "{{ tldr_pages_url }}", dest: "tldr.zip" }
         - { url: "{{ nerd_font_url }}", dest: "JetBrainsMono.tar.xz" }
+        - { url: "{{ duf_url }}", dest: "duf.tar.gz" }
 
     - name: Clone tmux plugins (TPM cannot fetch them on an air-gapped host)
       ansible.builtin.git:

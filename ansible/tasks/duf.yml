@@ -1,0 +1,14 @@
+---
+# duf: a modern `df` (added 2026-06-10, no original script). Static Go binary
+# from GitHub releases, used on both OSes — Ubuntu also packages it, but the
+# GitHub binary keeps the playbooks identical and offline handling simple.
+# Online: download on the target. Offline: extract the staged archive.
+
+- name: Download and extract duf into /usr/local/bin
+  become: true
+  ansible.builtin.unarchive:
+    src: "{{ (offline_dir ~ '/duf.tar.gz') if offline else duf_url }}"
+    dest: /usr/local/bin
+    remote_src: "{{ not offline }}"
+    extra_opts: ["duf"]  # the tarball also carries LICENSE/README — skip them
+    creates: /usr/local/bin/duf

@@ -24,6 +24,7 @@ offline_rpm_packages:
   - python3-pip
   - python3-devel
   - bat
+  - inxi
 
 # Packages bundled as DEBs for offline Ubuntu installs (with their full
 # dependency closure, resolved by fetch-offline.yml on a matching Ubuntu
@@ -38,6 +39,7 @@ offline_deb_packages:
   - thefuck
   - bat
   - fontconfig
+  - inxi
 
 # Scripts from cmd/ linked into ~/.local/bin (pomo.bak and test are skipped).
 cmd_scripts:
@@ -78,6 +80,11 @@ brew_install_url: "https://raw.githubusercontent.com/Homebrew/install/HEAD/insta
 
 # dysk (install/rhel/install-dysk)
 dysk_url: "https://dystroy.org/dysk/download/x86_64-linux/dysk"
+
+# duf (added 2026-06-10, no original script) — static Go binary, same source
+# on both OSes
+duf_version: "0.8.1"
+duf_url: "https://github.com/muesli/duf/releases/download/v{{ duf_version }}/duf_{{ duf_version }}_linux_x86_64.tar.gz"
 
 # tmux plugins (needed by tmux.conf on both OSes); online installs clone TPM
 # and let `prefix + I` fetch the rest, offline installs stage all three.

@@ -1,0 +1,29 @@
+---
+# inxi: full system information tool (added 2026-06-10, no original script).
+# A Perl script with dependencies, so it comes from the package manager:
+# EPEL on RHEL, apt on Ubuntu. Offline targets get it from the staged
+# RPM/DEB bundle (the apt task below also resolves from the local repo).
+
+# EPEL enable is duplicated from bat.yml on purpose, so `--tags inxi` works
+# standalone; the task is idempotent.
+- name: Enable EPEL repository (RHEL)
+  become: true
+  ansible.builtin.dnf:
+    name: "{{ epel_release_url }}"
+    state: present
+    disable_gpg_check: true
+  when: ansible_facts['os_family'] == 'RedHat' and not offline
+
+- name: Install inxi from EPEL (RHEL)
+  become: true
+  ansible.builtin.dnf:
+    name: inxi
+    state: present
+  when: ansible_facts['os_family'] == 'RedHat' and not offline
+
+- name: Install inxi (Ubuntu)
+  become: true
+  ansible.builtin.apt:
+    name: inxi
+    state: present
+  when: ansible_facts['os_family'] == 'Debian'
