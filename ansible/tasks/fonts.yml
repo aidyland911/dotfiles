@@ -12,14 +12,14 @@
 
 - name: Ensure user font directory exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/share/fonts"
+    path: "{{ ansible_facts.env.HOME }}/.local/share/fonts"
     state: directory
     mode: "0755"
 
 - name: Download and extract JetBrainsMono Nerd Font
   ansible.builtin.unarchive:
     src: "{{ nerd_font_url }}"
-    dest: "{{ ansible_env.HOME }}/.local/share/fonts"
+    dest: "{{ ansible_facts.env.HOME }}/.local/share/fonts"
     remote_src: true
-    creates: "{{ ansible_env.HOME }}/.local/share/fonts/JetBrainsMonoNerdFont-Regular.ttf"
+    creates: "{{ ansible_facts.env.HOME }}/.local/share/fonts/JetBrainsMonoNerdFont-Regular.ttf"
   notify: Refresh font cache

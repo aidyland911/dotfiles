@@ -3,25 +3,34 @@
 
 - name: Ensure ~/.local/bin exists
   ansible.builtin.file:
-    path: "{{ ansible_env.HOME }}/.local/bin"
+    path: "{{ ansible_facts.env.HOME }}/.local/bin"
     state: directory
     mode: "0755"
 
 - name: Symlink dotfiles into $HOME
   ansible.builtin.file:
     src: "{{ dotfiles_dir }}/{{ item.src }}"
-    dest: "{{ ansible_env.HOME }}/{{ item.dest }}"
+    dest: "{{ ansible_facts.env.HOME }}/{{ item.dest }}"
     state: link
     force: true
   loop:
     - { src: aliases, dest: .aliases }
     - { src: bashrc, dest: .bashrc }
+    - { src: functions, dest: .functions }
     - { src: tmux.conf, dest: .tmux.conf }
+
+- name: Install custom PS1 prompt system-wide
+  become: true
+  ansible.builtin.copy:
+    src: "{{ dotfiles_dir }}/profile.d/custom-ps1.sh"
+    dest: /etc/profile.d/custom-ps1.sh
+    mode: "0644"
+    remote_src: true
 
 - name: Link custom scripts from cmd/ into ~/.local/bin
   ansible.builtin.file:
     src: "{{ dotfiles_dir }}/cmd/{{ item }}"
-    dest: "{{ ansible_env.HOME }}/.local/bin/{{ item }}"
+    dest: "{{ ansible_facts.env.HOME }}/.local/bin/{{ item }}"
     state: link
     force: true
   loop: "{{ cmd_scripts }}"

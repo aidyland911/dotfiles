@@ -15,4 +15,4 @@
 - name: Clone TPM (tmux plugin manager)
   ansible.builtin.git:
     repo: "{{ tpm_repo }}"
-    dest: "{{ ansible_env.HOME }}/.tmux/plugins/tpm"
+    dest: "{{ ansible_facts.env.HOME }}/.tmux/plugins/tpm"

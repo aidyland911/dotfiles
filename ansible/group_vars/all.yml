@@ -1,6 +1,6 @@
 ---
 # Where the dotfiles repo lives on the target machine.
-dotfiles_dir: "{{ ansible_env.HOME }}/dotfiles"
+dotfiles_dir: "{{ ansible_facts.env.HOME }}/dotfiles"
 
 # Scripts from cmd/ linked into ~/.local/bin (pomo.bak and test are skipped).
 cmd_scripts:

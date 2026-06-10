@@ -141,6 +141,15 @@ Two notes:
   already on `PATH` via bashrc. The old installer never deployed them anywhere.
   `cmd/test` and `cmd/pomo.bak` are deliberately skipped (the list lives in
   `group_vars/all.yml` as `cmd_scripts`).
+- **Added (2026-06-10):** a `functions` file (extract-any-archive `extract()`
+  and ls-after-`cd()`) is symlinked to `~/.functions` and sourced from bashrc,
+  same pattern as `aliases`. Note `extract()` calls `unrar2dir`/`unzip2dir`,
+  which must exist separately for `.rar`/`.zip` support.
+- **Added (2026-06-10):** `profile.d/custom-ps1.sh` (the two-line 💣 prompt) is
+  copied to `/etc/profile.d/custom-ps1.sh` (root-owned, so this task uses
+  `become`), replacing the manual `sudo tee` step. `/etc/profile.d/` is only
+  sourced by *login* shells (SSH sessions, consoles) — for terminal tabs that
+  spawn non-login shells, source it from bashrc instead.
 
 ### `install/ubuntu/install-tmux` → `tasks/tmux.yml` (both playbooks)
 
@@ -195,6 +204,12 @@ machine regardless of which tools are installed:
   - `eval "$(thefuck --alias)"` and `alias fk=fuck` wrapped in
     `command -v thefuck` — no more startup error on machines without it.
   - Duplicate `MANPAGER` export given the same bat guard.
+- **`bashrc` additions (2026-06-10)**
+  - Sources the new `functions` file alongside `aliases`.
+  - `LESS_TERMCAP_*` exports for colorized man pages.
+  - `MANPAGER` now picks bat when installed, falling back to `less -R`
+    otherwise — instead of appending a competing `MANPAGER='less -R'` that
+    would have overridden the bat pager everywhere.
 
 ## Variables
 
