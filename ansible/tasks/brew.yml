@@ -2,54 +2,57 @@
 # Replaces install/ubuntu/install-brew. The original appended the brew
 # shellenv eval to ~/.bashrc; that now lives in the repo's bashrc behind an
 # "if brew exists" guard, so this file only installs Homebrew itself.
-# The installer must NOT run as root, so no become here.
 #
-# Skipped entirely when offline (the installer fundamentally needs internet:
-# it clones brew and downloads bottles from GitHub) and when the play runs as
-# root (Homebrew refuses root installs, with no override). To get brew on a
-# root-managed box, run the playbook as a regular sudo-capable user instead.
+# The whole block is skipped when offline (the installer fundamentally needs
+# internet: it clones brew and downloads bottles from GitHub) and when the
+# play runs as root (Homebrew hard-refuses root installs, no override; the
+# installer must also NOT use become). To get brew on a root-managed box,
+# run the playbook as a regular sudo-capable user instead.
 
 - name: Note why Homebrew is being skipped
   ansible.builtin.debug:
     msg: >-
       Skipping Homebrew: {{ 'offline mode' if offline else "Homebrew can't be
       installed as root — run the playbook as a regular user to get it" }}
-  when: offline or ansible_facts['user_id'] == 'root'
+  when: offline or (ansible_facts['user_uid'] | int == 0)
 
-- name: Check for existing Homebrew install
-  ansible.builtin.stat:
-    path: "{{ brew_prefix }}/bin/brew"
-  register: brew_bin
-  when: not offline and ansible_facts['user_id'] != 'root'
+- name: Install Homebrew (online, non-root only)
+  when:
+    - not offline
+    - ansible_facts['user_uid'] | int != 0
+  block:
+    - name: Check for existing Homebrew install
+      ansible.builtin.stat:
+        path: "{{ brew_prefix }}/bin/brew"
+      register: brew_bin
 
-- name: Install Homebrew build prerequisites
-  become: true
-  ansible.builtin.apt:
-    name:
-      - build-essential
-      - procps
-      - curl
-      - file
-      - git
-    state: present
-    update_cache: true
-  when: not offline and ansible_facts['user_id'] != 'root'
+    - name: Install Homebrew build prerequisites
+      become: true
+      ansible.builtin.apt:
+        name:
+          - build-essential
+          - procps
+          - curl
+          - file
+          - git
+        state: present
+        update_cache: true
 
-- name: Download Homebrew installer
-  ansible.builtin.get_url:
-    url: "{{ brew_install_url }}"
-    dest: /tmp/brew-install.sh
-    mode: "0755"
-  when: not offline and ansible_facts['user_id'] != 'root' and not brew_bin.stat.exists
+    - name: Download Homebrew installer
+      ansible.builtin.get_url:
+        url: "{{ brew_install_url }}"
+        dest: /tmp/brew-install.sh
+        mode: "0755"
+      when: not brew_bin.stat.exists
 
-- name: Run Homebrew installer (non-interactive)
-  ansible.builtin.command: /bin/bash /tmp/brew-install.sh
-  environment:
-    NONINTERACTIVE: "1"
-  when: not offline and ansible_facts['user_id'] != 'root' and not brew_bin.stat.exists
+    - name: Run Homebrew installer (non-interactive)
+      ansible.builtin.command: /bin/bash /tmp/brew-install.sh
+      environment:
+        NONINTERACTIVE: "1"
+      when: not brew_bin.stat.exists
 
-- name: Clean up installer
-  ansible.builtin.file:
-    path: /tmp/brew-install.sh
-    state: absent
-  when: not offline and ansible_facts['user_id'] != 'root' and not brew_bin.stat.exists
+    - name: Clean up installer
+      ansible.builtin.file:
+        path: /tmp/brew-install.sh
+        state: absent
+      when: not brew_bin.stat.exists

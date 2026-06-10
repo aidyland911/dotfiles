@@ -102,10 +102,6 @@
       ansible.builtin.import_tasks: tasks/tealdeer.yml
       tags: tealdeer
 
-    - name: Install Homebrew
-      ansible.builtin.import_tasks: tasks/brew.yml
-      tags: brew
-
     - name: Install JetBrainsMono Nerd Font
       ansible.builtin.import_tasks: tasks/fonts.yml
       tags: fonts
@@ -113,6 +109,13 @@
     - name: Install pomo
       ansible.builtin.import_tasks: tasks/pomo.yml
       tags: pomo
+
+    # Brew runs last on purpose: it's the only task set with hard external
+    # requirements (internet + non-root), so a failure or skip here can never
+    # block the rest of the setup.
+    - name: Install Homebrew
+      ansible.builtin.import_tasks: tasks/brew.yml
+      tags: brew
 
   handlers:
     - name: Refresh font cache
