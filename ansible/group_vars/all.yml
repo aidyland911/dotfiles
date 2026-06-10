@@ -12,9 +12,10 @@ offline_dir: "{{ playbook_dir }}/offline"
 
 # Packages bundled as RPMs for offline installs (with their full dependency
 # closure, resolved by fetch-offline.yml on a matching RHEL release).
+# No curl/wget: Ansible modules download via Python, the shell scripts that
+# needed them are retired, and full curl conflicts with the curl-minimal
+# package on RHEL 9 minimal installs.
 offline_rpm_packages:
-  - curl
-  - wget
   - tar
   - unzip
   - xz

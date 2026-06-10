@@ -128,6 +128,11 @@ Notes:
 - The RPM bundle is dependency-resolved against the **staging** machine's dnf
   metadata, which is why the jumpbox must run the same RHEL release as the
   targets (here: both RHEL 9). Same for the Python wheels (same Python = 3.9).
+- `offline_rpm_packages` deliberately excludes curl and wget: Ansible modules
+  download via Python so the playbook never needs them, and requesting full
+  `curl` fails on RHEL 9 minimal installs because it conflicts with the
+  preinstalled `curl-minimal` (hit on automation1; `curl-minimal` still
+  provides the `curl` command).
 - Remote targets also get the dotfiles repo itself pushed from the control
   node (tarball excluding `.git`, `.venv`, `offline/`) — an air-gapped host
   can't `git clone` it. Local runs keep using the existing checkout.

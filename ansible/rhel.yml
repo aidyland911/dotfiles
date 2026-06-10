@@ -17,12 +17,12 @@
         that: ansible_facts['os_family'] == 'RedHat'
         fail_msg: "This playbook targets RHEL-family systems. Use ubuntu.yml for Debian-family hosts."
 
+    # No curl/wget here: Ansible downloads via Python, and full curl conflicts
+    # with curl-minimal on RHEL 9 minimal installs.
     - name: Install base packages needed by later tasks
       become: true
       ansible.builtin.dnf:
         name:
-          - curl
-          - wget
           - tar
           - unzip
           - xz
